@@ -115,6 +115,7 @@ def read_good_file(good_data):
         }
 
     for weapon in good_data['weapons']:
+        ascension = weapon['ascension']
         if weapon['location'] in character_info:
             max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
 
