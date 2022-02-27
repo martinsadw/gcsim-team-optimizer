@@ -1,0 +1,21 @@
+good_to_gcsim_stats = {
+    'hp': 'hp',
+    'hp_': 'hp%',
+    'atk': 'atk',
+    'atk_': 'atk%',
+    'def': 'def',
+    'def_': 'def%',
+    'eleMas': 'em',
+    'enerRech_': 'er',
+    'heal_': 'heal',
+    'critRate_': 'cr',
+    'critDMG_': 'cd',
+    'physical_dmg_': 'phys%',
+    'anemo_dmg_': 'anemo%',
+    'geo_dmg_': 'geo%',
+    'electro_dmg_': 'electro%',
+    'hydro_dmg_': 'hydro%',
+    'pyro_dmg_': 'pyro%',
+    'cryo_dmg_': 'cryo%',
+    'dendro_dmg_': 'dendro%'
+}
