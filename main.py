@@ -4,6 +4,7 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 import json
+import math
 import os
 import re
 import subprocess
@@ -62,13 +63,10 @@ def gcsim_team(character_info, character_list):
     return result
 
 
-def read_good_file(filename):
-    with open(filename) as good_file:
-        data = json.load(good_file)
-
+def read_good_file(good_data):
     character_info = dict()
 
-    for character in data['characters']:
+    for character in good_data['characters']:
         key = character['key']
         ascension = character['ascension']
         max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
@@ -116,7 +114,7 @@ def read_good_file(filename):
             }
         }
 
-    for weapon in data['weapons']:
+    for weapon in good_data['weapons']:
         if weapon['location'] in character_info:
             max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
 
@@ -127,7 +125,7 @@ def read_good_file(filename):
                 'refine': weapon['refinement']
             }
 
-    for artifact in data['artifacts']:
+    for artifact in good_data['artifacts']:
         if artifact['location'] in character_info:
             character = character_info[artifact['location']]
             stat_value = artifact_main_stat[artifact['mainStatKey']][artifact['level']]
@@ -182,10 +180,48 @@ def run_team(character_info, team_name, iterations=1000):
     print('Std:', dps['std'])
 
 
-def main():
-    team_name = 'hyper_raiden'
-    character_info = read_good_file('data/data.json')
+def read_artifacts(good_data):
+    artifact_data = {
+        'flower': [],
+        'plume': [],
+        'sands': [],
+        'goblet': [],
+        'circlet': []
+    }
 
+    for artifact in good_data['artifacts']:
+        new_artifact = {
+            'id': artifact['Id'],
+            'level': artifact['level'],
+            'set_key': artifact['setKey'],
+            'main_stat_key': artifact['mainStatKey'],
+            'sub_stats': {},
+            'empty_sub_stats': 0,
+            'missing_sub_stats': math.ceil((20 - artifact['level']) / 4)
+        }
+        for sub_stat in artifact['substats']:
+            if sub_stat['key'] is None:
+                new_artifact['empty_sub_stats'] += 1
+            elif sub_stat['key'] in percent_stats:
+                new_artifact['sub_stats'][sub_stat['key']] = sub_stat['value'] / 100
+            else:
+                new_artifact['sub_stats'][sub_stat['key']] = sub_stat['value']
+
+        artifact_data[artifact['slotKey']].append(new_artifact)
+
+    return artifact_data
+
+
+def main():
+    good_filename = 'data/data.json'
+    team_name = 'hyper_raiden'
+
+    with open(good_filename) as good_file:
+        good_data = json.load(good_file)
+
+    artifact_data = read_artifacts(good_data)
+
+    character_info = read_good_file(good_data)
     run_team(character_info, team_name, iterations=100)
 
 
