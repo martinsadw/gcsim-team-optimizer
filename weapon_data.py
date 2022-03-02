@@ -1,4 +1,4 @@
-weapon_type = {
+weapon_type_map = {
     'Akuoumaru': 'claymore',
     'AlleyHunter': 'bow',
     'AmenomaKageuchi': 'sword',
