@@ -241,6 +241,29 @@ def read_weapons(good_data):
     return weapon_data
 
 
+def read_characters(good_data):
+    characters_data = []
+
+    for character_id, character in enumerate(good_data['characters']):
+        ascension = character['ascension']
+        max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
+        new_character = {
+            'id': character_id,
+            'level': character['level'],
+            'max_level': max_level,
+            'ascension': ascension,
+            'constellation': character['constellation'],
+            'talent_1': character['talent']['auto'],
+            'talent_2': character['talent']['skill'],
+            'talent_3': character['talent']['burst'],
+            'key': character['key']
+        }
+
+        characters_data.append(new_character)
+
+    return characters_data
+
+
 def main():
     good_filename = 'data/data.json'
     team_name = 'hyper_raiden'
@@ -248,8 +271,9 @@ def main():
     with open(good_filename) as good_file:
         good_data = json.load(good_file)
 
-    artifact_data = read_artifacts(good_data)
-    weapon_data = read_weapons(good_data)
+    artifacts_data = read_artifacts(good_data)
+    weapons_data = read_weapons(good_data)
+    characters_data = read_characters(good_data)
 
     # character_info = read_good_file(good_data)
     # run_team(character_info, team_name, iterations=100)
