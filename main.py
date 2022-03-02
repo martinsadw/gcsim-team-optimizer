@@ -10,6 +10,7 @@ import re
 import subprocess
 
 from artifact_data import artifact_main_stat, percent_stats
+from weapon_data import weapon_type
 from gcsim_names import good_to_gcsim_stats
 
 from actions import actions_dict
@@ -213,6 +214,33 @@ def read_artifacts(good_data):
     return artifact_data
 
 
+def read_weapons(good_data):
+    weapon_data = {
+        'bow': [],
+        'catalyst': [],
+        'polearm': [],
+        'claymore': [],
+        'sword': []
+    }
+
+    for weapon_id, weapon in enumerate(good_data['weapons']):
+        ascension = weapon['ascension']
+        max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
+        new_weapon = {
+            'id': weapon_id,
+            'level': weapon['level'],
+            'max_level': weapon['level'],
+            'ascension': ascension,
+            'refinement': weapon['refinement'],
+            'key': weapon['key'],
+            'type': weapon_type[weapon['key']]
+        }
+
+        weapon_data[new_weapon['type']].append(new_weapon)
+
+    return weapon_data
+
+
 def main():
     good_filename = 'data/data.json'
     team_name = 'hyper_raiden'
@@ -221,9 +249,10 @@ def main():
         good_data = json.load(good_file)
 
     artifact_data = read_artifacts(good_data)
+    weapon_data = read_weapons(good_data)
 
-    character_info = read_good_file(good_data)
-    run_team(character_info, team_name, iterations=100)
+    # character_info = read_good_file(good_data)
+    # run_team(character_info, team_name, iterations=100)
 
 
 if __name__ == '__main__':
