@@ -87,7 +87,16 @@ def read_characters(good_data):
 
 
 def get_weapons_by_name(weapons_data, weapon_name):
+    if weapon_name not in weapon_type_map:
+        return []
+
     weapon_type = weapon_type_map[weapon_name]
     weapons = list((x for x in weapons_data[weapon_type] if x['key'] == weapon_name))
 
     return weapons
+
+
+def get_character_by_name(characters_data, character_name):
+    character = next((x for x in characters_data if x['key'] == character_name))
+
+    return character

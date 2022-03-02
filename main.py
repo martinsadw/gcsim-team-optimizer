@@ -7,7 +7,7 @@ from artifact_data import artifact_main_stat, percent_stats
 from gcsim_names import good_to_gcsim_stats
 
 from actions import actions_dict
-from reader import read_artifacts, read_weapons, read_characters, get_weapons_by_name
+from reader import read_artifacts, read_weapons, read_characters, get_weapons_by_name, get_character_by_name
 
 
 def character_to_gcsim(character):
@@ -191,6 +191,7 @@ def main():
     # run_team(character_info, team_name, iterations=100)
 
     print(get_weapons_by_name(weapons_data, 'DodocoTales'))
+    print(get_character_by_name(characters_data, 'RaidenShogun'))
 
 
 if __name__ == '__main__':
