@@ -1,7 +1,8 @@
 import math
 
-from weapon_data import weapon_type_map
 from artifact_data import percent_stats
+from character_data import character_weapon_type_map
+from weapon_data import weapon_type_map
 
 
 def read_artifacts(good_data):
@@ -55,7 +56,8 @@ def read_weapons(good_data):
             'ascension': ascension,
             'refinement': weapon['refinement'],
             'key': weapon['key'],
-            'type': weapon_type_map[weapon['key']]
+            'type': weapon_type_map[weapon['key']],
+            'location': weapon['location']
         }
 
         weapon_data[new_weapon['type']].append(new_weapon)
@@ -94,6 +96,16 @@ def get_weapons_by_name(weapons_data, weapon_name):
     weapons = list((x for x in weapons_data[weapon_type] if x['key'] == weapon_name))
 
     return weapons
+
+
+def get_weapon_by_character(weapons_data, character_name):
+    weapon_type = character_weapon_type_map[character_name]
+
+    for weapon in weapons_data[weapon_type]:
+        if weapon['location'] == character_name:
+            return weapon
+
+    return None
 
 
 def get_character_by_name(characters_data, character_name):

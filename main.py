@@ -7,7 +7,7 @@ from artifact_data import artifact_main_stat, percent_stats
 from gcsim_names import good_to_gcsim_stats
 
 from actions import actions_dict
-from reader import read_artifacts, read_weapons, read_characters, get_weapons_by_name, get_character_by_name
+import reader
 
 
 def calculate_artifact_stats(artifacts):
@@ -237,13 +237,14 @@ def main():
     with open(good_filename) as good_file:
         good_data = json.load(good_file)
 
-    artifacts_data = read_artifacts(good_data)
-    weapons_data = read_weapons(good_data)
-    characters_data = read_characters(good_data)
+    artifacts_data = reader.read_artifacts(good_data)
+    weapons_data = reader.read_weapons(good_data)
+    characters_data = reader.read_characters(good_data)
 
     raiden_build = {
-        'character': get_character_by_name(characters_data, 'RaidenShogun'),
-        'weapon': get_weapons_by_name(weapons_data, 'TheCatch')[0],
+        'character': reader.get_character_by_name(characters_data, 'RaidenShogun'),
+        'weapon': reader.get_weapon_by_character(weapons_data, 'RaidenShogun'),
+
         'artifacts': {
             'flower': artifacts_data['flower'][0],
             'plume': artifacts_data['plume'][0],
@@ -253,8 +254,8 @@ def main():
         }
     }
     yae_build = {
-        'character': get_character_by_name(characters_data, 'YaeMiko'),
-        'weapon': get_weapons_by_name(weapons_data, 'OathswornEye')[0],
+        'character': reader.get_character_by_name(characters_data, 'YaeMiko'),
+        'weapon': reader.get_weapon_by_character(weapons_data, 'YaeMiko'),
         'artifacts': {
             'flower': artifacts_data['flower'][1],
             'plume': artifacts_data['plume'][1],
@@ -264,8 +265,8 @@ def main():
         }
     }
     bennett_build = {
-        'character': get_character_by_name(characters_data, 'Bennett'),
-        'weapon': get_weapons_by_name(weapons_data, 'PrototypeRancour')[0],
+        'character': reader.get_character_by_name(characters_data, 'Bennett'),
+        'weapon': reader.get_weapon_by_character(weapons_data, 'Bennett'),
         'artifacts': {
             'flower': artifacts_data['flower'][2],
             'plume': artifacts_data['plume'][2],
@@ -275,8 +276,8 @@ def main():
         }
     }
     kazuha_build = {
-        'character': get_character_by_name(characters_data, 'KaedeharaKazuha'),
-        'weapon': get_weapons_by_name(weapons_data, 'IronSting')[0],
+        'character': reader.get_character_by_name(characters_data, 'KaedeharaKazuha'),
+        'weapon': reader.get_weapon_by_character(weapons_data, 'KaedeharaKazuha'),
         'artifacts': {
             'flower': artifacts_data['flower'][3],
             'plume': artifacts_data['plume'][3],
