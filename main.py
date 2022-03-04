@@ -141,8 +141,16 @@ def run_team(gcsim_filename):
 
 def main():
     good_filename = 'data/data.json'
-    team_name = 'hyper_raiden'
+    team_name = 'hutao_xingqiu_albedo_zhongli'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
+
+    # TODO(andre): Allow to pass special parameters to the final gcsim file
+    # Examples:
+    # Hu Tao stating HP: 'start_hp=3000'
+    # Husk of Opulent Dreams initial stack: '+params=[stacks=4]'
+
+    # TODO(andre): Allow to change the default passive energy generation
+    # i.e. 'energy every interval=240,360 amount=1;'
 
     with open(good_filename) as good_file:
         good_data = json.load(good_file)
@@ -151,12 +159,7 @@ def main():
     weapons_data = reader.read_weapons(good_data)
     characters_data = reader.read_characters(good_data)
 
-    raiden_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'RaidenShogun')
-    yae_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'YaeMiko')
-    bennett_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'Bennett')
-    kazuha_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'KaedeharaKazuha')
-
-    team_info = [raiden_build, yae_build, bennett_build, kazuha_build]
+    team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
 
     create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
     run_team(gcsim_filename)

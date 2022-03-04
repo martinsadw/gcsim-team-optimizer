@@ -145,3 +145,10 @@ def get_character_build_by_name(characters_data, weapons_data, artifacts_data, c
     }
 
     return character_build
+
+
+def get_team_build(characters_data, weapons_data, artifacts_data, team_list):
+    team_info = [get_character_build_by_name(characters_data, weapons_data, artifacts_data, name)
+                 for name in team_list]
+
+    return team_info
