@@ -107,92 +107,6 @@ def character_to_gcsim(character_info):
     return result
 
 
-# def read_good_file(good_data):
-#     character_info = dict()
-#
-#     for character in good_data['characters']:
-#         key = character['key']
-#         ascension = character['ascension']
-#         max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
-#
-#         character_info[key] = {
-#             'key': key,
-#             'level': character['level'],
-#             'max_level': max_level,
-#             'constellation': character['constellation'],
-#             'talent_1': character['talent']['auto'],
-#             'talent_2': character['talent']['skill'],
-#             'talent_3': character['talent']['burst'],
-#             'artifact_set': {},
-#             'main_stats': {
-#                 'hp': 0,
-#                 'hp_': 0,
-#                 'atk': 0,
-#                 'atk_': 0,
-#                 'def_': 0,
-#                 'eleMas': 0,
-#                 'enerRech_': 0,
-#                 'heal_': 0,
-#                 'critRate_': 0,
-#                 'critDMG_': 0,
-#                 'physical_dmg_': 0,
-#                 'anemo_dmg_': 0,
-#                 'geo_dmg_': 0,
-#                 'electro_dmg_': 0,
-#                 'hydro_dmg_': 0,
-#                 'pyro_dmg_': 0,
-#                 'cryo_dmg_': 0
-#             },
-#             'sub_stats': {
-#                 'hp': 0,
-#                 'hp_': 0,
-#                 'atk': 0,
-#                 'atk_': 0,
-#                 'def': 0,
-#                 'def_': 0,
-#                 'eleMas': 0,
-#                 'enerRech_': 0,
-#                 'heal_': 0,
-#                 'critRate_': 0,
-#                 'critDMG_': 0
-#             }
-#         }
-#
-#     for weapon in good_data['weapons']:
-#         ascension = weapon['ascension']
-#         if weapon['location'] in character_info:
-#             max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
-#
-#             character_info[weapon['location']]['weapon'] = {
-#                 'key': weapon['key'],
-#                 'level': weapon['level'],
-#                 'max_level': max_level,
-#                 'refine': weapon['refinement']
-#             }
-#
-#     for artifact in good_data['artifacts']:
-#         if artifact['location'] in character_info:
-#             character = character_info[artifact['location']]
-#             stat_value = artifact_main_stat[artifact['mainStatKey']][artifact['level']]
-#             if artifact['mainStatKey'] in percent_stats:
-#                 stat_value /= 100
-#             character['main_stats'][artifact['mainStatKey']] += stat_value
-#
-#             for substats in artifact['substats']:
-#                 if substats['key']:
-#                     stat_value = substats['value']
-#                     if substats['key'] in percent_stats:
-#                         stat_value /= 100
-#                     character['sub_stats'][substats['key']] += stat_value
-#
-#             if artifact['setKey'] in character['artifact_set']:
-#                 character['artifact_set'][artifact['setKey']] += 1
-#             else:
-#                 character['artifact_set'][artifact['setKey']] = 1
-#
-#     return character_info
-
-
 def create_gcsim_file(team_info, actions, filename, iterations=1000):
     with open(filename, 'w') as file:
         file.write('# Character Info\n')
@@ -237,26 +151,11 @@ def main():
     weapons_data = reader.read_weapons(good_data)
     characters_data = reader.read_characters(good_data)
 
-    raiden_build = {
-        'character': reader.get_character_by_name(characters_data, 'RaidenShogun'),
-        'weapon': reader.get_weapon_by_character(weapons_data, 'RaidenShogun'),
-        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'RaidenShogun')
-    }
-    yae_build = {
-        'character': reader.get_character_by_name(characters_data, 'YaeMiko'),
-        'weapon': reader.get_weapon_by_character(weapons_data, 'YaeMiko'),
-        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'YaeMiko')
-    }
-    bennett_build = {
-        'character': reader.get_character_by_name(characters_data, 'Bennett'),
-        'weapon': reader.get_weapon_by_character(weapons_data, 'Bennett'),
-        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'Bennett')
-    }
-    kazuha_build = {
-        'character': reader.get_character_by_name(characters_data, 'KaedeharaKazuha'),
-        'weapon': reader.get_weapon_by_character(weapons_data, 'KaedeharaKazuha'),
-        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'KaedeharaKazuha')
-    }
+    raiden_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'RaidenShogun')
+    yae_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'YaeMiko')
+    bennett_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'Bennett')
+    kazuha_build = reader.get_character_build_by_name(characters_data, weapons_data, artifacts_data, 'KaedeharaKazuha')
+
     team_info = [raiden_build, yae_build, bennett_build, kazuha_build]
 
     create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)

@@ -135,3 +135,13 @@ def get_character_by_name(characters_data, character_name):
     character = next((x for x in characters_data if x['key'] == character_name))
 
     return character
+
+
+def get_character_build_by_name(characters_data, weapons_data, artifacts_data, character_name):
+    character_build = {
+        'character': get_character_by_name(characters_data, character_name),
+        'weapon': get_weapon_by_character(weapons_data, character_name),
+        'artifacts': get_artifact_set_by_character(artifacts_data, character_name)
+    }
+
+    return character_build
