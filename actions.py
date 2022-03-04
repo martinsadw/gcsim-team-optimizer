@@ -7,17 +7,9 @@ actions_dict['hyper_raiden'] = {
   'actions': '''active raidenshogun;
   
 raidenshogun skill;
-yaemiko skill:3;
-kaedeharakazuha skill[hold=1], high_plunge;
-bennett burst;
-yaemiko attack:2, burst, skill:3;
-kaedeharakazuha burst;
-raidenshogun burst, attack:3, charge, attack:3, charge, attack:3, charge, skill;
-kaedeharakazuha skill, high_plunge;
-bennett skill;
-yaemiko skill:3;
-bennett burst;
-kaedeharakazuha skill, high_plunge, burst;
+yaemiko skill:3, burst, skill:3;
+bennett skill, burst;
+kaedeharakazuha skill[hold=1], high_plunge, burst;
 raidenshogun burst, attack:3, charge, attack:3, charge, attack:3, charge;
 restart;'''
 }

@@ -240,47 +240,22 @@ def main():
     raiden_build = {
         'character': reader.get_character_by_name(characters_data, 'RaidenShogun'),
         'weapon': reader.get_weapon_by_character(weapons_data, 'RaidenShogun'),
-
-        'artifacts': {
-            'flower': reader.get_artifact_piece_by_character(artifacts_data, 'flower', 'RaidenShogun'),
-            'plume': reader.get_artifact_piece_by_character(artifacts_data, 'plume', 'RaidenShogun'),
-            'sands': reader.get_artifact_piece_by_character(artifacts_data, 'sands', 'RaidenShogun'),
-            'goblet': reader.get_artifact_piece_by_character(artifacts_data, 'goblet', 'RaidenShogun'),
-            'circlet': reader.get_artifact_piece_by_character(artifacts_data, 'circlet', 'RaidenShogun')
-        }
+        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'RaidenShogun')
     }
     yae_build = {
         'character': reader.get_character_by_name(characters_data, 'YaeMiko'),
         'weapon': reader.get_weapon_by_character(weapons_data, 'YaeMiko'),
-        'artifacts': {
-            'flower': reader.get_artifact_piece_by_character(artifacts_data, 'flower', 'YaeMiko'),
-            'plume': reader.get_artifact_piece_by_character(artifacts_data, 'plume', 'YaeMiko'),
-            'sands': reader.get_artifact_piece_by_character(artifacts_data, 'sands', 'YaeMiko'),
-            'goblet': reader.get_artifact_piece_by_character(artifacts_data, 'goblet', 'YaeMiko'),
-            'circlet': reader.get_artifact_piece_by_character(artifacts_data, 'circlet', 'YaeMiko')
-        }
+        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'YaeMiko')
     }
     bennett_build = {
         'character': reader.get_character_by_name(characters_data, 'Bennett'),
         'weapon': reader.get_weapon_by_character(weapons_data, 'Bennett'),
-        'artifacts': {
-            'flower': reader.get_artifact_piece_by_character(artifacts_data, 'flower', 'Bennett'),
-            'plume': reader.get_artifact_piece_by_character(artifacts_data, 'plume', 'Bennett'),
-            'sands': reader.get_artifact_piece_by_character(artifacts_data, 'sands', 'Bennett'),
-            'goblet': reader.get_artifact_piece_by_character(artifacts_data, 'goblet', 'Bennett'),
-            'circlet': reader.get_artifact_piece_by_character(artifacts_data, 'circlet', 'Bennett')
-        }
+        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'Bennett')
     }
     kazuha_build = {
         'character': reader.get_character_by_name(characters_data, 'KaedeharaKazuha'),
         'weapon': reader.get_weapon_by_character(weapons_data, 'KaedeharaKazuha'),
-        'artifacts': {
-            'flower': reader.get_artifact_piece_by_character(artifacts_data, 'flower', 'KaedeharaKazuha'),
-            'plume': reader.get_artifact_piece_by_character(artifacts_data, 'plume', 'KaedeharaKazuha'),
-            'sands': reader.get_artifact_piece_by_character(artifacts_data, 'sands', 'KaedeharaKazuha'),
-            'goblet': reader.get_artifact_piece_by_character(artifacts_data, 'goblet', 'KaedeharaKazuha'),
-            'circlet': reader.get_artifact_piece_by_character(artifacts_data, 'circlet', 'KaedeharaKazuha')
-        }
+        'artifacts': reader.get_artifact_set_by_character(artifacts_data, 'KaedeharaKazuha')
     }
     team_info = [raiden_build, yae_build, bennett_build, kazuha_build]
 

@@ -99,6 +99,18 @@ def get_artifact_piece_by_character(artifacts_data, artifact_type, character_nam
     return None
 
 
+def get_artifact_set_by_character(artifacts_data, character_name):
+    artifacts = {
+        'flower': get_artifact_piece_by_character(artifacts_data, 'flower', character_name),
+        'plume': get_artifact_piece_by_character(artifacts_data, 'plume', character_name),
+        'sands': get_artifact_piece_by_character(artifacts_data, 'sands', character_name),
+        'goblet': get_artifact_piece_by_character(artifacts_data, 'goblet', character_name),
+        'circlet': get_artifact_piece_by_character(artifacts_data, 'circlet', character_name)
+    }
+
+    return artifacts
+
+
 def get_weapons_by_name(weapons_data, weapon_name):
     if weapon_name not in weapon_type_map:
         return []
