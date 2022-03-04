@@ -49,15 +49,11 @@ def calculate_artifact_stats(artifacts):
 
     for artifact in artifacts.values():
         stat_value = artifact_main_stat[artifact['main_stat_key']][artifact['level']]
-        if artifact['main_stat_key'] in percent_stats:
-            stat_value /= 100
         stats['main_stats'][artifact['main_stat_key']] += stat_value
 
         for sub_stat_key, sub_stat_value in artifact['sub_stats'].items():
             if sub_stat_key:
                 stat_value = sub_stat_value
-                if sub_stat_key in percent_stats:
-                    stat_value /= 100
                 stats['sub_stats'][sub_stat_key] += stat_value
 
         if artifact['set_key'] in stats['artifact_set']:
