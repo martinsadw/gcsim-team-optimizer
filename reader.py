@@ -22,7 +22,8 @@ def read_artifacts(good_data):
             'main_stat_key': artifact['mainStatKey'],
             'sub_stats': {},
             'empty_sub_stats': 0,
-            'missing_sub_stats': math.ceil((20 - artifact['level']) / 4)
+            'missing_sub_stats': math.ceil((20 - artifact['level']) / 4),
+            'location': artifact['location']
         }
         for sub_stat in artifact['substats']:
             if sub_stat['key'] is None:
@@ -86,6 +87,16 @@ def read_characters(good_data):
         characters_data.append(new_character)
 
     return characters_data
+
+
+def get_artifact_piece_by_character(artifacts_data, artifact_type, character_name):
+    # artifact_type = character_weapon_type_map[character_name]
+
+    for artifact in artifacts_data[artifact_type]:
+        if artifact['location'] == character_name:
+            return artifact
+
+    return None
 
 
 def get_weapons_by_name(weapons_data, weapon_name):
