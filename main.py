@@ -1,7 +1,9 @@
 import json
 import os
+import random
 import re
 import subprocess
+from pprint import pprint
 
 from artifact_data import artifact_main_stat
 from gcsim_names import good_to_gcsim_stats
@@ -133,30 +135,50 @@ def run_team(gcsim_filename):
     gcsim_result = subprocess.run([gcsim_exec_path, '-c', gcsim_filename], capture_output=True)
     dps = re.search(dps_regex, gcsim_result.stdout.decode('utf-8'), re.MULTILINE)
 
-    print('DPS:', dps['mean'])
-    print('Min:', dps['min_dps'])
-    print('Max:', dps['max_dps'])
-    print('Std:', dps['std'])
+    # print('DPS:', dps['mean'])
+    # print('Min:', dps['min_dps'])
+    # print('Max:', dps['max_dps'])
+    # print('Std:', dps['std'])
+    return dps
 
 
-def genetic_algorithm(characters_data, weapons_data, artifacts_data, actions):
+def gcsim_fitness(data, vector):
+    characters_data, weapons_data, artifacts_data, actions = data
+    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
+
+    temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
+    gcsim_filename = os.path.join(temp_gcsim_path, '_'.join([str(x) for x in vector]) + '.txt')
+    if not os.path.exists(gcsim_filename):
+        create_gcsim_file(team_info, actions, gcsim_filename, iterations=10)
+    fitness = run_team(gcsim_filename)
+
+    return float(fitness['mean'])
+
+
+def genetic_algorithm(data, fitness_function):
+    characters_data, weapons_data, artifacts_data, actions = data
+
     temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
     os.makedirs(temp_gcsim_path, exist_ok=True)
 
-    # solution = [0,  15, 15, 18,  8, 13,
-    #             6,   5,  6,  4,  6,  4,
-    #             0,   1,  1,  0,  2,  2,
-    #             10,  9,  9,  6, 19,  6]
-    solution = [0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0]
+    quant_options = reader.get_equipment_vector_quant_options(weapons_data, artifacts_data, actions['team'])
 
-    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], solution)
+    best_fitness = 0
+    best_vector = []
+    num_iterations = 100
+    for i in range(num_iterations):
+        if i % 5 == 0:
+            print('Iteration {i}/{max} ({percent:.2f}%)'.format(i=i, max=num_iterations,
+                                                                percent=(i / num_iterations) * 100))
 
-    gcsim_filename = os.path.join(temp_gcsim_path, '_'.join([str(x) for x in solution]) + '.txt')
-    create_gcsim_file(team_info, actions, gcsim_filename, iterations=100)
-    run_team(gcsim_filename)
+        solution = [random.randrange(quant) for quant in quant_options]
+        fitness = fitness_function(data, solution)
+
+        if best_fitness < fitness:
+            best_fitness = fitness
+            best_vector = solution
+
+    return best_vector, best_fitness
 
 
 def main():
@@ -179,7 +201,19 @@ def main():
     weapons_data = reader.read_weapons(good_data)
     characters_data = reader.read_characters(good_data)
 
-    genetic_algorithm(characters_data, weapons_data, artifacts_data, actions_dict[team_name])
+    data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
+    build_vector, fitness = genetic_algorithm(data, gcsim_fitness)
+
+    # solution = [0,  15, 15, 18,  8, 13,
+    #             6,   5,  6,  4,  6,  4,
+    #             0,   1,  1,  0,  2,  2,
+    #             10,  9,  9,  6, 19,  6]
+    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
+                                                actions_dict[team_name]['team'], build_vector)
+    pprint(team_info)
+
+    print('Best DPS:', fitness)
+    print('Build:', build_vector)
 
     # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
