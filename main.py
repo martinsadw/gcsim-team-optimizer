@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 
-from artifact_data import artifact_main_stat, percent_stats
+from artifact_data import artifact_main_stat
 from gcsim_names import good_to_gcsim_stats
 
 from actions import actions_dict
@@ -139,6 +139,26 @@ def run_team(gcsim_filename):
     print('Std:', dps['std'])
 
 
+def genetic_algorithm(characters_data, weapons_data, artifacts_data, actions):
+    temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
+    os.makedirs(temp_gcsim_path, exist_ok=True)
+
+    # solution = [0,  15, 15, 18,  8, 13,
+    #             6,   5,  6,  4,  6,  4,
+    #             0,   1,  1,  0,  2,  2,
+    #             10,  9,  9,  6, 19,  6]
+    solution = [0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0]
+
+    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], solution)
+
+    gcsim_filename = os.path.join(temp_gcsim_path, '_'.join([str(x) for x in solution]) + '.txt')
+    create_gcsim_file(team_info, actions, gcsim_filename, iterations=100)
+    run_team(gcsim_filename)
+
+
 def main():
     good_filename = 'data/data.json'
     team_name = 'hutao_xingqiu_albedo_zhongli'
@@ -159,10 +179,11 @@ def main():
     weapons_data = reader.read_weapons(good_data)
     characters_data = reader.read_characters(good_data)
 
-    team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
+    genetic_algorithm(characters_data, weapons_data, artifacts_data, actions_dict[team_name])
 
-    create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
-    run_team(gcsim_filename)
+    # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
+    # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
+    # run_team(gcsim_filename)
 
 
 if __name__ == '__main__':

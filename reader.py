@@ -152,3 +152,23 @@ def get_team_build(characters_data, weapons_data, artifacts_data, team_list):
                  for name in team_list]
 
     return team_info
+
+
+def get_team_build_by_vector(characters_data, weapons_data, artifacts_data, team_list, equipment_vector):
+    weapons_types = [character_weapon_type_map[name] for name in team_list]
+    weapons_options = [weapons_data[weapon_type] for weapon_type in weapons_types]
+
+    team_info = []
+    for i, name in enumerate(team_list):
+        team_info.append({
+            'character': get_character_by_name(characters_data, name),
+            'weapon': weapons_options[i][equipment_vector[i*6 + 0]],
+            'artifacts': {
+                'flower': artifacts_data['flower'][equipment_vector[i*6 + 1]],
+                'plume': artifacts_data['plume'][equipment_vector[i*6 + 2]],
+                'sands': artifacts_data['sands'][equipment_vector[i*6 + 3]],
+                'goblet': artifacts_data['goblet'][equipment_vector[i*6 + 4]],
+                'circlet': artifacts_data['circlet'][equipment_vector[i*6 + 5]]
+            }
+        })
+    return team_info
