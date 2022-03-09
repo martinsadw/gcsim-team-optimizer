@@ -5,6 +5,8 @@ import re
 import subprocess
 from pprint import pprint
 
+import numpy as np
+
 from artifact_data import artifact_main_stat
 from gcsim_names import good_to_gcsim_stats
 
@@ -142,7 +144,7 @@ def run_team(gcsim_filename):
     return dps
 
 
-def gcsim_fitness(data, vector):
+def gcsim_fitness(vector, data):
     characters_data, weapons_data, artifacts_data, actions = data
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
 
@@ -162,21 +164,69 @@ def genetic_algorithm(data, fitness_function):
     os.makedirs(temp_gcsim_path, exist_ok=True)
 
     quant_options = reader.get_equipment_vector_quant_options(weapons_data, artifacts_data, actions['team'])
+    vector_length = len(quant_options)
 
-    best_fitness = 0
+    best_fitness = -1
     best_vector = []
-    num_iterations = 100
+
+    num_iterations = 200
+    population_size = 100
+    selection_size = 20
+
+    population = np.array([[random.randrange(quant) for quant in quant_options] for i in range(population_size)])
+    fitness = np.apply_along_axis(fitness_function, 1, population, data)
+
+    # Sort the population using the fitness
+    population_order = fitness.argsort()[::-1]
+    population = population[population_order]
+    fitness = fitness[population_order]
+
     for i in range(num_iterations):
-        if i % 5 == 0:
-            print('Iteration {i}/{max} ({percent:.2f}%)'.format(i=i, max=num_iterations,
-                                                                percent=(i / num_iterations) * 100))
+        print('Iteration {i}/{max} ({percent:.2f}%)'
+              .format(i=i, max=num_iterations, percent=(i / num_iterations) * 100))
 
-        solution = [random.randrange(quant) for quant in quant_options]
-        fitness = fitness_function(data, solution)
+        new_population = population.copy()
+        # new_population[selection_size:] = 0
 
-        if best_fitness < fitness:
-            best_fitness = fitness
-            best_vector = solution
+        for j in range(selection_size, population_size):
+            # Random selection
+            parent_1 = population[random.randrange(population_size)]
+            parent_2 = population[random.randrange(population_size)]
+
+            # Two points crossover
+            cut_point1 = random.randrange(vector_length)
+            cut_point2 = random.randrange(vector_length)
+
+            r = np.arange(vector_length)
+            mask1 = r < cut_point1
+            mask2 = r < cut_point2
+            crossover_mask = mask1 ^ mask2
+
+            new_individual = np.choose(crossover_mask, [parent_1, parent_2])
+
+            # Random Mutation
+            mutation_chance = 0.1
+            mutation_mask = np.random.rand(vector_length) < mutation_chance
+            mutation = np.array([random.randrange(quant) for quant in quant_options])
+
+            new_individual = np.choose(mutation_mask, [new_individual, mutation])
+
+            new_population[j] = new_individual
+
+        # Calculate the new population fitness
+        new_fitness = np.apply_along_axis(fitness_function, 1, new_population, data)
+
+        # Sort the population using the fitness
+        population_order = new_fitness.argsort()[::-1]
+        new_population = new_population[population_order]
+        new_fitness = new_fitness[population_order]
+
+        if best_fitness < new_fitness[0]:
+            best_fitness = new_fitness[0]
+            best_vector = new_population[0]
+
+        population = new_population
+        print('Partial Fitness:', best_fitness)
 
     return best_vector, best_fitness
 
