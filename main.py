@@ -144,14 +144,14 @@ def run_team(gcsim_filename):
     return dps
 
 
-def gcsim_fitness(vector, data):
+def gcsim_fitness(vector, data, iterations=10, force_write=False):
     characters_data, weapons_data, artifacts_data, actions = data
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
 
     temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
     gcsim_filename = os.path.join(temp_gcsim_path, '_'.join([str(x) for x in vector]) + '.txt')
-    if not os.path.exists(gcsim_filename):
-        create_gcsim_file(team_info, actions, gcsim_filename, iterations=10)
+    if force_write or not os.path.exists(gcsim_filename):
+        create_gcsim_file(team_info, actions, gcsim_filename, iterations=iterations)
     fitness = run_team(gcsim_filename)
 
     return float(fitness['mean'])
@@ -188,10 +188,18 @@ def genetic_algorithm(data, fitness_function):
         new_population = population.copy()
         # new_population[selection_size:] = 0
 
+        print(fitness)
         for j in range(selection_size, population_size):
-            # Random selection
-            parent_1 = population[random.randrange(population_size)]
-            parent_2 = population[random.randrange(population_size)]
+            # # Random selection
+            # parent_1 = population[random.randrange(population_size)]
+            # parent_2 = population[random.randrange(population_size)]
+
+            # Roulette selection
+            parents = random.choices(range(len(fitness)), fitness, k=2)
+            parent_1 = population[parents[0]]
+            parent_2 = population[parents[1]]
+
+            #############
 
             # Two points crossover
             cut_point1 = random.randrange(vector_length)
@@ -203,6 +211,8 @@ def genetic_algorithm(data, fitness_function):
             crossover_mask = mask1 ^ mask2
 
             new_individual = np.choose(crossover_mask, [parent_1, parent_2])
+
+            #############
 
             # Random Mutation
             mutation_chance = 0.1
@@ -226,9 +236,20 @@ def genetic_algorithm(data, fitness_function):
             best_vector = new_population[0]
 
         population = new_population
+        fitness = new_fitness
         print('Partial Fitness:', best_fitness)
+        print('Partial Build:', best_vector)
 
-    return best_vector, best_fitness
+    final_fitness = np.apply_along_axis(fitness_function, 1, population, data, iterations=1000, force_write=True)
+    population_order = final_fitness.argsort()[::-1]
+    population = population[population_order]
+    final_fitness = final_fitness[population_order]
+
+    print('Final Fitness:', final_fitness)
+    print('Final Build:', population[0])
+
+    # return best_vector, best_fitness
+    return population[0], final_fitness[0]
 
 
 def main():

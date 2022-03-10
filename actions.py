@@ -51,6 +51,11 @@ albedo skill,attack,burst,attack
        +if=.cd.hutao.skill<120
        && .status.xqburst>300;
 
+albedo skill,attack
+       +swap_to=zhongli
+       +if=.cd.hutao.skill<120
+       && .status.xqburst>300;
+
 zhongli burst,attack
         +swap_to=hutao
         +if=.cd.hutao.skill<120;

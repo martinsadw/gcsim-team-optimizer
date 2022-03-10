@@ -177,11 +177,11 @@ def get_team_build_by_vector(characters_data, weapons_data, artifacts_data, team
 def get_equipment_vector_quant_options(weapons_data, artifacts_data, team_list):
     weapons_types = [character_weapon_type_map[name] for name in team_list]
     artifacts_quant_options = [
-        len(artifacts_data['flower']),
-        len(artifacts_data['plume']),
-        len(artifacts_data['sands']),
-        len(artifacts_data['goblet']),
-        len(artifacts_data['circlet']),
+        min(len(artifacts_data['flower']), 60),
+        min(len(artifacts_data['plume']), 60),
+        min(len(artifacts_data['sands']), 60),
+        min(len(artifacts_data['goblet']), 60),
+        min(len(artifacts_data['circlet']), 60),
     ]
 
     quant_options = []
