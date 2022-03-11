@@ -165,13 +165,15 @@ def genetic_algorithm(data, fitness_function):
 
     quant_options = reader.get_equipment_vector_quant_options(weapons_data, artifacts_data, actions['team'])
     vector_length = len(quant_options)
+    character_length = 6
+    quant_characters = vector_length / character_length
 
     best_fitness = -1
     best_vector = []
 
-    num_iterations = 200
-    population_size = 100
-    selection_size = 20
+    num_iterations = 500
+    population_size = 200
+    selection_size = 40
 
     population = np.array([[random.randrange(quant) for quant in quant_options] for i in range(population_size)])
     fitness = np.apply_along_axis(fitness_function, 1, population, data)
@@ -190,6 +192,8 @@ def genetic_algorithm(data, fitness_function):
 
         print(fitness)
         for j in range(selection_size, population_size):
+            r = np.arange(vector_length)
+
             # # Random selection
             # parent_1 = population[random.randrange(population_size)]
             # parent_2 = population[random.randrange(population_size)]
@@ -201,22 +205,36 @@ def genetic_algorithm(data, fitness_function):
 
             #############
 
-            # Two points crossover
-            cut_point1 = random.randrange(vector_length)
-            cut_point2 = random.randrange(vector_length)
+            # # Two points crossover
+            # cut_point1 = random.randrange(vector_length)
+            # cut_point2 = random.randrange(vector_length)
+            #
+            # mask1 = r < cut_point1
+            # mask2 = r < cut_point2
+            # crossover_mask = mask1 ^ mask2
+            #
+            # new_individual = np.choose(crossover_mask, [parent_1, parent_2])
 
-            r = np.arange(vector_length)
-            mask1 = r < cut_point1
-            mask2 = r < cut_point2
-            crossover_mask = mask1 ^ mask2
+            # Character crossover
+            c = random.randrange(quant_characters)
+            character_mask = (r >= c * character_length) & (r < (c + 1) * character_length)
 
-            new_individual = np.choose(crossover_mask, [parent_1, parent_2])
+            new_individual = np.choose(character_mask, [parent_1, parent_2])
 
             #############
 
-            # Random Mutation
+            # # Random mutation
+            # mutation_chance = 0.1
+            # mutation_mask = (np.random.rand(vector_length) < mutation_chance)
+            # mutation = np.array([random.randrange(quant) for quant in quant_options])
+            #
+            # new_individual = np.choose(mutation_mask, [new_individual, mutation])
+
+            # Per character mutation
+            c = random.randrange(quant_characters)
+            character_mask = (r >= c * character_length) & (r < (c + 1) * character_length)
             mutation_chance = 0.1
-            mutation_mask = np.random.rand(vector_length) < mutation_chance
+            mutation_mask = (np.random.rand(vector_length) < mutation_chance) & character_mask
             mutation = np.array([random.randrange(quant) for quant in quant_options])
 
             new_individual = np.choose(mutation_mask, [new_individual, mutation])
@@ -254,7 +272,8 @@ def genetic_algorithm(data, fitness_function):
 
 def main():
     good_filename = 'data/data.json'
-    team_name = 'hutao_xingqiu_albedo_zhongli'
+    # team_name = 'hutao_xingqiu_albedo_zhongli'
+    team_name = 'hyper_raiden'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
     # TODO(andre): Allow to pass special parameters to the final gcsim file
