@@ -166,7 +166,7 @@ def genetic_algorithm(data, fitness_function):
     quant_options = reader.get_equipment_vector_quant_options(weapons_data, artifacts_data, actions['team'])
     vector_length = len(quant_options)
     character_length = 6
-    quant_characters = vector_length / character_length
+    quant_characters = int(vector_length / character_length)
 
     best_fitness = -1
     best_vector = []
@@ -176,6 +176,7 @@ def genetic_algorithm(data, fitness_function):
     selection_size = 40
 
     population = np.array([[random.randrange(quant) for quant in quant_options] for i in range(population_size)])
+    # population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
     fitness = np.apply_along_axis(fitness_function, 1, population, data)
 
     # Sort the population using the fitness
@@ -304,6 +305,13 @@ def main():
 
     print('Best DPS:', fitness)
     print('Build:', build_vector)
+
+    # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
+    #                                      actions_dict[team_name]['team'])
+    # print(team_vector)
+    # team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
+    #                                             actions_dict[team_name]['team'], team_vector)
+    # pprint(team_info)
 
     # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)

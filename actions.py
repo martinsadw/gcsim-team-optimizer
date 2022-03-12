@@ -42,7 +42,8 @@ xingqiu skill[orbital=1],burst[orbital=1],attack;
 xingqiu skill[orbital=1]
         +if=.cd.xingqiu.burst > 300;
 
-zhongli skill[hold_nostele=1],attack
+# zhongli skill[hold_nostele=1],attack
+zhongli skill,attack
         +swap_to=albedo
         +if=.status.xqburst>300;
 

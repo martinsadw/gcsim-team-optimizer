@@ -90,8 +90,6 @@ def read_characters(good_data):
 
 
 def get_artifact_piece_by_character(artifacts_data, artifact_type, character_name):
-    # artifact_type = character_weapon_type_map[character_name]
-
     for artifact in artifacts_data[artifact_type]:
         if artifact['location'] == character_name:
             return artifact
@@ -152,6 +150,27 @@ def get_team_build(characters_data, weapons_data, artifacts_data, team_list):
                  for name in team_list]
 
     return team_info
+
+
+def get_team_vector(characters_data, weapons_data, artifacts_data, team_list):
+    character_length = 6
+    quant_character = len(team_list)
+    team_vector = [0] * (character_length * quant_character)
+
+    for i, character_name in enumerate(team_list):
+        weapon_type = character_weapon_type_map[character_name]
+        for j, weapon in enumerate(weapons_data[weapon_type]):
+            if weapon['location'] == character_name:
+                team_vector[i * character_length] = j
+                break
+
+        for j, artifact_type in enumerate(['flower', 'plume', 'sands', 'goblet', 'circlet']):
+            for k, artifact in enumerate(artifacts_data[artifact_type]):
+                if artifact['location'] == character_name:
+                    team_vector[i * character_length + j + 1] = k
+                    break
+
+    return team_vector
 
 
 def get_team_build_by_vector(characters_data, weapons_data, artifacts_data, team_list, equipment_vector):
