@@ -148,6 +148,9 @@ def gcsim_fitness(vector, data, iterations=10, force_write=False):
     characters_data, weapons_data, artifacts_data, actions = data
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
 
+    if not reader.validate_team(actions['team'], vector):
+        return 0
+
     temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
     gcsim_filename = os.path.join(temp_gcsim_path, '_'.join([str(x) for x in vector]) + '.txt')
     if force_write or not os.path.exists(gcsim_filename):
@@ -274,7 +277,8 @@ def genetic_algorithm(data, fitness_function):
 def main():
     good_filename = 'data/data.json'
     # team_name = 'hutao_xingqiu_albedo_zhongli'
-    team_name = 'hyper_raiden'
+    # team_name = 'hyper_raiden'
+    team_name = 'raiden_national'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
     # TODO(andre): Allow to pass special parameters to the final gcsim file
@@ -313,9 +317,14 @@ def main():
     #                                             actions_dict[team_name]['team'], team_vector)
     # pprint(team_info)
 
+    # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
+    #                                      actions_dict[team_name]['team'])
+    # print(reader.validate_team(actions_dict[team_name]['team'], team_vector))
+
     # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
-    # run_team(gcsim_filename)
+    # dps = run_team(gcsim_filename)
+    # print(dps['mean'])
 
 
 if __name__ == '__main__':

@@ -209,3 +209,24 @@ def get_equipment_vector_quant_options(weapons_data, artifacts_data, team_list):
         quant_options.extend(artifacts_quant_options)
 
     return quant_options
+
+
+def validate_team(team_list, equipment_vector):
+    character_length = 6
+
+    used_equipments = set()
+    for i, character_name in enumerate(team_list):
+        weapon_type = character_weapon_type_map[character_name]
+
+        weapon_key = (weapon_type, equipment_vector[i * character_length])
+        if weapon_key in used_equipments:
+            return False
+        used_equipments.add(weapon_key)
+
+        for j in range(1, character_length):
+            artifact_key = (j, equipment_vector[i * character_length + j])
+            if artifact_key in used_equipments:
+                return False
+            used_equipments.add(artifact_key)
+
+    return True
