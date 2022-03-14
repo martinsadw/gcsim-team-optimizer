@@ -144,11 +144,12 @@ def run_team(gcsim_filename):
     return dps
 
 
-def gcsim_fitness(vector, data, iterations=10, force_write=False):
+def gcsim_fitness(vector, data, iterations=10, force_write=False, validation_penalty=1):
     characters_data, weapons_data, artifacts_data, actions = data
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
 
-    if not reader.validate_team(actions['team'], vector):
+    is_team_valid = reader.validate_team(actions['team'], vector)
+    if validation_penalty >= 1 and not is_team_valid:
         return 0
 
     temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
@@ -157,7 +158,11 @@ def gcsim_fitness(vector, data, iterations=10, force_write=False):
         create_gcsim_file(team_info, actions, gcsim_filename, iterations=iterations)
     fitness = run_team(gcsim_filename)
 
-    return float(fitness['mean'])
+    dps = float(fitness['mean'])
+    if not is_team_valid:
+        dps *= (1 - validation_penalty)
+
+    return dps
 
 
 def genetic_algorithm(data, fitness_function):
@@ -180,7 +185,7 @@ def genetic_algorithm(data, fitness_function):
 
     population = np.array([[random.randrange(quant) for quant in quant_options] for i in range(population_size)])
     # population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
-    fitness = np.apply_along_axis(fitness_function, 1, population, data)
+    fitness = np.apply_along_axis(fitness_function, 1, population, data, validation_penalty=0.1)
 
     # Sort the population using the fitness
     population_order = fitness.argsort()[::-1]
@@ -296,6 +301,7 @@ def main():
     weapons_data = reader.read_weapons(good_data)
     characters_data = reader.read_characters(good_data)
 
+    # Genetic Algorithm
     data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
     build_vector, fitness = genetic_algorithm(data, gcsim_fitness)
 
@@ -310,6 +316,7 @@ def main():
     print('Best DPS:', fitness)
     print('Build:', build_vector)
 
+    # # Team Vector
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
     #                                      actions_dict[team_name]['team'])
     # print(team_vector)
@@ -317,10 +324,12 @@ def main():
     #                                             actions_dict[team_name]['team'], team_vector)
     # pprint(team_info)
 
+    # # Validation
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
     #                                      actions_dict[team_name]['team'])
     # print(reader.validate_team(actions_dict[team_name]['team'], team_vector))
 
+    # # Team Reader
     # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
     # dps = run_team(gcsim_filename)
