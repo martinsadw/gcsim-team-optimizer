@@ -7,6 +7,9 @@ from pprint import pprint
 
 import numpy as np
 
+import artifact
+import character
+import weapon
 from artifact_data import artifact_main_stat
 from gcsim_names import good_to_gcsim_stats
 
@@ -297,9 +300,14 @@ def main():
     with open(good_filename) as good_file:
         good_data = json.load(good_file)
 
-    artifacts_data = reader.read_artifacts(good_data)
-    weapons_data = reader.read_weapons(good_data)
     characters_data = reader.read_characters(good_data)
+    weapons_data = reader.read_weapons(good_data)
+    artifacts_data = reader.read_artifacts(good_data)
+
+    # Upgrade Characters and Equipments
+    character.upgrade_characters(characters_data)
+    weapon.upgrade_weapons(weapons_data)
+    artifact.upgrade_artifacts(artifacts_data)
 
     # Genetic Algorithm
     data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
@@ -331,6 +339,14 @@ def main():
 
     # # Team Reader
     # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
+    # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
+    # dps = run_team(gcsim_filename)
+    # print(dps['mean'])
+
+    # # Check Vector
+    # team_vector = [0, 20, 7, 20, 0, 21, 5, 29, 25, 32, 11, 16, 5, 21, 32, 12, 18, 14, 1, 12, 26, 13, 32, 10]
+    # team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
+    #                                             actions_dict[team_name]['team'], team_vector)
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
     # dps = run_team(gcsim_filename)
     # print(dps['mean'])
