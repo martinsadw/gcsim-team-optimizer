@@ -3,6 +3,7 @@ import os
 import random
 import re
 import subprocess
+import time
 from pprint import pprint
 
 import numpy as np
@@ -15,6 +16,9 @@ from gcsim_names import good_to_gcsim_stats
 
 from actions import actions_dict
 import reader
+
+global quant_evaluations
+global quant_invalid
 
 
 def calculate_artifact_stats(artifacts):
@@ -147,32 +151,53 @@ def run_team(gcsim_filename):
     return dps
 
 
-def gcsim_fitness(vector, data, iterations=10, force_write=False, validation_penalty=1):
+def gcsim_fitness(vector, data, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None):
+    global quant_evaluations
+    global quant_invalid
+
+    cache_key = tuple(vector)
+    if fitness_cache is not None:
+        if cache_key in fitness_cache:
+            return fitness_cache[cache_key]
+
     characters_data, weapons_data, artifacts_data, actions = data
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
 
     is_team_valid = reader.validate_team(actions['team'], vector)
-    if validation_penalty >= 1 and not is_team_valid:
-        return 0
+    if not is_team_valid:
+        quant_invalid += 1
+        if validation_penalty >= 1:
+            return 0
 
     temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
     gcsim_filename = os.path.join(temp_gcsim_path, '_'.join([str(x) for x in vector]) + '.txt')
     if force_write or not os.path.exists(gcsim_filename):
         create_gcsim_file(team_info, actions, gcsim_filename, iterations=iterations)
     fitness = run_team(gcsim_filename)
+    quant_evaluations += iterations
 
     dps = float(fitness['mean'])
     if not is_team_valid:
         dps *= (1 - validation_penalty)
 
+    if fitness_cache is not None:
+        fitness_cache[cache_key] = dps
+
     return dps
 
 
 def genetic_algorithm(data, fitness_function):
+    global quant_evaluations
+    global quant_invalid
+    quant_evaluations = 0
+    quant_invalid = 0
+
     characters_data, weapons_data, artifacts_data, actions = data
 
     temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
     os.makedirs(temp_gcsim_path, exist_ok=True)
+
+    fitness_cache = dict()
 
     quant_options = reader.get_equipment_vector_quant_options(weapons_data, artifacts_data, actions['team'])
     vector_length = len(quant_options)
@@ -185,10 +210,12 @@ def genetic_algorithm(data, fitness_function):
     num_iterations = 500
     population_size = 200
     selection_size = 40
+    validation_penalty = 1
 
     population = np.array([[random.randrange(quant) for quant in quant_options] for i in range(population_size)])
     # population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
-    fitness = np.apply_along_axis(fitness_function, 1, population, data, validation_penalty=0.1)
+    fitness = np.apply_along_axis(fitness_function, 1, population, data,
+                                  validation_penalty=validation_penalty, fitness_cache=fitness_cache)
 
     # Sort the population using the fitness
     population_order = fitness.argsort()[::-1]
@@ -200,7 +227,9 @@ def genetic_algorithm(data, fitness_function):
               .format(i=i, max=num_iterations, percent=(i / num_iterations) * 100))
 
         new_population = population.copy()
+        new_fitness = fitness.copy()
         # new_population[selection_size:] = 0
+        # new_fitness[selection_size:] = 0
 
         print(fitness)
         for j in range(selection_size, population_size):
@@ -254,7 +283,9 @@ def genetic_algorithm(data, fitness_function):
             new_population[j] = new_individual
 
         # Calculate the new population fitness
-        new_fitness = np.apply_along_axis(fitness_function, 1, new_population, data)
+        new_fitness[selection_size:] = np.apply_along_axis(fitness_function, 1, new_population[selection_size:], data,
+                                                           validation_penalty=validation_penalty,
+                                                           fitness_cache=fitness_cache)
 
         # Sort the population using the fitness
         population_order = new_fitness.argsort()[::-1]
@@ -267,10 +298,13 @@ def genetic_algorithm(data, fitness_function):
 
         population = new_population
         fitness = new_fitness
+        print('Quant evaluations:', quant_evaluations)
+        print('Quant invalid:', quant_invalid)
         print('Partial Fitness:', best_fitness)
         print('Partial Build:', best_vector)
 
-    final_fitness = np.apply_along_axis(fitness_function, 1, population, data, iterations=1000, force_write=True)
+    final_fitness = np.apply_along_axis(fitness_function, 1, population, data,
+                                        iterations=1000, force_write=True)
     population_order = final_fitness.argsort()[::-1]
     population = population[population_order]
     final_fitness = final_fitness[population_order]
@@ -353,4 +387,9 @@ def main():
 
 
 if __name__ == '__main__':
+    start = time.perf_counter()
     main()
+    duration = time.perf_counter() - start
+    print('Execution duration: {h:d}:{m:02d}:{s:.3f}'.format(h=int(duration / 3600),
+                                                             m=int((duration % 3600) / 60),
+                                                             s=duration % 60))
