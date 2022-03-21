@@ -19,7 +19,9 @@ def main():
     good_filename = 'data/data.json'
     # team_name = 'hutao_xingqiu_albedo_zhongli'
     # team_name = 'hyper_raiden'
-    team_name = 'raiden_national'
+    # team_name = 'raiden_national'
+    team_name = 'kokomi_electrocharged'
+    # team_name = 'eula_shield'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
     # TODO(andre): Allow to pass special parameters to the final gcsim file
@@ -37,6 +39,9 @@ def main():
     weapons_data = reader.read_weapons(good_data)
     artifacts_data = reader.read_artifacts(good_data)
 
+    character.add_character(characters_data, 'SangonomiyaKokomi')
+    character.add_character(characters_data, 'KaedeharaKazuha')
+
     # Upgrade Characters and Equipments
     character.upgrade_characters(characters_data)
     weapon.upgrade_weapons(weapons_data)
@@ -45,11 +50,6 @@ def main():
     # Genetic Algorithm
     data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
     build_vector, fitness = genetic_algorithm(data, gcsim_fitness)
-
-    # solution = [0,  15, 15, 18,  8, 13,
-    #             6,   5,  6,  4,  6,  4,
-    #             0,   1,  1,  0,  2,  2,
-    #             10,  9,  9,  6, 19,  6]
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
                                                 actions_dict[team_name]['team'], build_vector)
     pprint(team_info)

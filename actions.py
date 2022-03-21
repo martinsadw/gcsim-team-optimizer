@@ -150,3 +150,44 @@ bennett skill, attack;
 
 xiangling attack:3;'''
 }
+
+actions_dict['kokomi_electrocharged'] = {
+  'team': ['YaeMiko', 'KaedeharaKazuha', 'Fischl', 'SangonomiyaKokomi'],
+  'simulation_length': 100,
+  'mode': 'sl',
+  'actions': '''active yaemiko;
+
+yaemiko skill:3;
+kaedeharakazuha skill[hold=1], high_plunge;
+fischl attack:2, skill;
+kokomi attack:2, skill;
+yaemiko burst, skill:3;
+kaedeharakazuha burst, skill[hold=1], high_plunge;
+fischl attack:2, burst;
+kokomi burst,
+       attack:2, charge,
+       attack:2, charge,
+       attack:2, charge,
+       attack:2, charge,
+       attack:3,
+       attack:2, charge;
+restart;'''
+}
+
+actions_dict['eula_shield'] = {
+  'team': ['Eula', 'RaidenShogun', 'Rosaria', 'Zhongli'],
+  'simulation_length': 102,
+  'mode': 'sl',
+  'actions': '''active raiden;
+
+raiden skill;
+zhongli skill[hold=1];
+rosaria skill;
+eula skill;
+rosaria burst;
+eula burst,attack:4,skill[hold=1],attack:4;
+rosaria skill;
+eula attack:2;
+raiden burst,attack:3,charge,attack:3,charge,attack:3,charge;
+restart;'''
+}
