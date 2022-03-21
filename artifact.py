@@ -39,6 +39,9 @@ def calculate_artifact_stats(artifacts):
     }
 
     for artifact in artifacts.values():
+        if artifact is None:
+            continue
+
         stat_value = artifact_main_stat[artifact['main_stat_key']][artifact['level']]
         stats['main_stats'][artifact['main_stat_key']] += stat_value
 
