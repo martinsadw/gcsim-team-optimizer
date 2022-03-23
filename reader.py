@@ -18,6 +18,7 @@ def read_artifacts(good_data):
         new_artifact = {
             'id': artifact['Id'],
             'level': artifact['level'],
+            'rarity': artifact['rarity'],
             'set_key': artifact['setKey'],
             'main_stat_key': artifact['mainStatKey'],
             'sub_stats': {},

@@ -1,4 +1,4 @@
-from artifact_data import artifact_main_stat
+from artifact_data import artifact_main_stat, artifact_max_sub_stat
 
 
 def calculate_artifact_stats(artifacts):
@@ -62,3 +62,10 @@ def upgrade_artifacts(artifacts_data):
     for artifacts_piece in artifacts_data.values():
         for artifact in artifacts_piece:
             artifact['level'] = 20
+
+
+def artifact_quality(artifact_piece):
+    quality = 0
+    for key, sub_stat in artifact_piece['sub_stats'].items():
+        quality += float(sub_stat) / artifact_max_sub_stat[key][str(artifact_piece['rarity'])]
+    return quality / 9

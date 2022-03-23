@@ -7,9 +7,10 @@ from gcsim_utils import gcsim_fitness
 from genetic_algorithm import genetic_algorithm
 from gcsim_utils import create_gcsim_file, run_team
 
-import reader
 import artifact
 import character
+import reader
+import stats
 import weapon
 
 from actions import actions_dict
@@ -22,6 +23,7 @@ def main():
     # team_name = 'raiden_national'
     team_name = 'kokomi_electrocharged'
     # team_name = 'eula_shield'
+    # team_name = 'eula_bennett'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
     # TODO(andre): Allow to pass special parameters to the final gcsim file
@@ -39,13 +41,16 @@ def main():
     weapons_data = reader.read_weapons(good_data)
     artifacts_data = reader.read_artifacts(good_data)
 
-    character.add_character(characters_data, 'SangonomiyaKokomi')
-    character.add_character(characters_data, 'KaedeharaKazuha')
-
     # Upgrade Characters and Equipments
     character.upgrade_characters(characters_data)
     weapon.upgrade_weapons(weapons_data)
     artifact.upgrade_artifacts(artifacts_data)
+
+    # good_filename_2 = 'data/data_2.json'
+    # with open(good_filename_2) as good_file_2:
+    #     good_data_2 = json.load(good_file_2)
+    # stats.plot_set_count([good_data, good_data_2], ['Data 1', 'Data 2'],
+    #                      artifact.artifact_quality, thresholds=[0.9, 0.8, 0.7, 0.6, 0.5])
 
     # Genetic Algorithm
     data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])

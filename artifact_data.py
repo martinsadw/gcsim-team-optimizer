@@ -18,5 +18,158 @@ artifact_main_stat = {
     'cryo_dmg_': [0.07, 0.09, 0.110, 0.129, 0.149, 0.169, 0.189, 0.209, 0.228, 0.248, 0.268, 0.288, 0.308, 0.328, 0.347, 0.367, 0.387, 0.407, 0.427, 0.446, 0.466]
 }
 
+artifact_max_sub_stat = {
+    "hp": {
+        "1": 29.88,
+        "2": 71.70,
+        "3": 143.40,
+        "4": 239.00,
+        "5": 298.75
+    },
+    "hp_": {
+        "1": 0.0146,
+        "2": 0.0233,
+        "3": 0.035,
+        "4": 0.0466,
+        "5": 0.0583
+      },
+    "atk": {
+        "1": 1.95,
+        "2": 4.67,
+        "3": 9.34,
+        "4": 15.56,
+        "5": 19.45
+      },
+    "atk_": {
+        "1": 0.0146,
+        "2": 0.0233,
+        "3": 0.035,
+        "4": 0.0466,
+        "5": 0.0583
+      },
+    "def": {
+        "1": 2.31,
+        "2": 5.56,
+        "3": 11.11,
+        "4": 18.52,
+        "5": 23.15
+      },
+    "def_": {
+        "1": 0.0182,
+        "2": 0.0291,
+        "3": 0.0437,
+        "4": 0.0583,
+        "5": 0.0729
+      },
+    "eleMas": {
+        "1": 5.83,
+        "2": 9.33,
+        "3": 13.99,
+        "4": 18.56,
+        "5": 23.31
+      },
+    "enerRech_": {
+        "1": 0.0162,
+        "2": 0.0259,
+        "3": 0.0389,
+        "4": 0.0518,
+        "5": 0.0648
+      },
+    "critRate_":{
+        "1": 0.0097,
+        "2": 0.0155,
+        "3": 0.0233,
+        "4": 0.0311,
+        "5": 0.0389
+      },
+    "critDMG_": {
+        "1": 0.0194,
+        "2": 0.0311,
+        "3": 0.0466,
+        "4": 0.0622,
+        "5": 0.0777
+      }
+}
+
 percent_stats = {'hp_', 'atk_', 'def_', 'enerRech_', 'heal_', 'critRate_', 'critDMG_', 'physical_dmg_', 'anemo_dmg_',
                  'geo_dmg_', 'electro_dmg_', 'hydro_dmg_', 'pyro_dmg_', 'cryo_dmg_'}
+
+artifact_set_readable = {
+  "Adventurer": "Adventurer",
+  "ArchaicPetra": "Archaic Petra",
+  "Berserker": "Berserker",
+  "BlizzardStrayer": "Blizzard Strayer",
+  "BloodstainedChivalry": "Bloodstained Chivalry",
+  "BraveHeart": "Brave Heart",
+  "CrimsonWitchOfFlames": "Crimson Witch of Flames",
+  "DefendersWill": "Defender's Will",
+  "EmblemOfSeveredFate": "Emblem of Severed Fate",
+  "Gambler": "Gambler",
+  "GladiatorsFinale": "Gladiator's Finale",
+  "HeartOfDepth": "Heart of Depth",
+  "HuskOfOpulentDreams": "Husk of Opulent Dreams",
+  "Instructor": "Instructor",
+  "Lavawalker": "Lavawalker",
+  "LuckyDog": "Lucky Dog",
+  "MaidenBeloved": "Maiden Beloved",
+  "MartialArtist": "Martial Artist",
+  "NoblesseOblige": "Noblesse Oblige",
+  "OceanHuedClam": "Ocean-Hued Clam",
+  "PaleFlame": "Pale Flame",
+  "PrayersForDestiny": "Prayers for Destiny",
+  "PrayersForIllumination": "Prayers for Illumination",
+  "PrayersForWisdom": "Prayers for Wisdom",
+  "PrayersToSpringtime": "Prayers to Springtime",
+  "ResolutionOfSojourner": "Resolution of Sojourner",
+  "RetracingBolide": "Retracing Bolide",
+  "Scholar": "Scholar",
+  "ShimenawasReminiscence": "Shimenawa's Reminiscence",
+  "TenacityOfTheMillelith": "Tenacity of the Millelith",
+  "TheExile": "The Exile",
+  "ThunderingFury": "Thundering Fury",
+  "Thundersoother": "Thundersoother",
+  "TinyMiracle": "Tiny Miracle",
+  "TravelingDoctor": "Traveling Doctor",
+  "ViridescentVenerer": "Viridescent Venerer",
+  "WanderersTroupe": "Wanderer's Troupe",
+}
+
+artifact_set_readable_short = {
+  "Adventurer": "Adventurer",
+  "ArchaicPetra": "Archaic Petra",
+  "Berserker": "Berserker",
+  "BlizzardStrayer": "Blizzard Strayer",
+  "BloodstainedChivalry": "Bloodstained",
+  "BraveHeart": "Brave Heart",
+  "CrimsonWitchOfFlames": "Crimson Witch",
+  "DefendersWill": "Defender",
+  "EmblemOfSeveredFate": "Severed Fate",
+  "Gambler": "Gambler",
+  "GladiatorsFinale": "Gladiator",
+  "HeartOfDepth": "Heart of Depth",
+  "HuskOfOpulentDreams": "Husk",
+  "Instructor": "Instructor",
+  "Lavawalker": "Lavawalker",
+  "LuckyDog": "Lucky Dog",
+  "MaidenBeloved": "Maiden",
+  "MartialArtist": "Martial Artist",
+  "NoblesseOblige": "Noblesse",
+  "OceanHuedClam": "Ocean-Hued",
+  "PaleFlame": "Pale Flame",
+  "PrayersForDestiny": "Prayers for Destiny",
+  "PrayersForIllumination": "Prayers for Illumination",
+  "PrayersForWisdom": "Prayers for Wisdom",
+  "PrayersToSpringtime": "Prayers to Springtime",
+  "ResolutionOfSojourner": "Resolution of Sojourner",
+  "RetracingBolide": "Retracing Bolide",
+  "Scholar": "Scholar",
+  "ShimenawasReminiscence": "Shimenawa",
+  "TenacityOfTheMillelith": "Millelith",
+  "TheExile": "Exile",
+  "ThunderingFury": "Thundering Fury",
+  "Thundersoother": "Thundersoother",
+  "TinyMiracle": "Tiny Miracle",
+  "TravelingDoctor": "Traveling Doctor",
+  "ViridescentVenerer": "Viridescent",
+  "WanderersTroupe": "Wanderer",
+}
