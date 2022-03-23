@@ -191,3 +191,20 @@ eula attack:2;
 raiden burst,attack:3,charge,attack:3,charge,attack:3,charge;
 restart;'''
 }
+
+actions_dict['eula_bennett'] = {
+  'team': ['Eula', 'RaidenShogun', 'Bennett', 'Rosaria'],
+  'simulation_length': 110,
+  'mode': 'sl',
+  'actions': '''active raiden;
+
+raiden skill;
+rosaria skill,burst;
+eula skill;
+bennett skill,burst;
+eula burst,attack:4,skill[hold=1],attack:4;
+rosaria skill,attack;
+raiden burst,attack:3,charge,attack:3,charge,attack:3,charge;
+restart;
+'''
+}
