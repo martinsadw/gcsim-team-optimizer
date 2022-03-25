@@ -7,25 +7,27 @@ import numpy as np
 import reader
 
 
-def fitness_worker(task_queue, result_queue, fitness_function, data):
+def fitness_worker(task_queue, result_queue, fitness_function, data, temp_actions_path=None):
     while True:
         item = task_queue.get()
         if item is None:
             break
 
         j, vector, iterations, validation_penalty, force_write = item
-        result = fitness_function(vector, data, iterations=iterations,
-                                  validation_penalty=validation_penalty, force_write=force_write)
+        result = fitness_function(vector, data, iterations=iterations, validation_penalty=validation_penalty,
+                                  force_write=force_write, temp_actions_path=temp_actions_path)
         result_queue.put((j, result))
         task_queue.task_done()
 
 
-def create_fitness_queue(fitness_function, data, num_workers=1):
+def create_fitness_queue(fitness_function, data, num_workers=1, temp_actions_path=None):
     task_queue = multiprocessing.JoinableQueue()
     result_queue = multiprocessing.Queue()
 
     for i in range(num_workers):
-        multiprocessing.Process(target=fitness_worker, args=(task_queue, result_queue, fitness_function, data)).start()
+        process = multiprocessing.Process(target=fitness_worker,
+                                          args=(task_queue, result_queue, fitness_function, data, temp_actions_path))
+        process.start()
 
     return task_queue, result_queue
 
@@ -35,11 +37,12 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
 
     characters_data, weapons_data, artifacts_data, actions = data
 
-    temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
-    os.makedirs(temp_gcsim_path, exist_ok=True)
+    temp_actions_path = os.path.join('actions', 'temp_gcsim')
+    os.makedirs(temp_actions_path, exist_ok=True)
 
     fitness_cache = dict()
-    task_queue, result_queue = create_fitness_queue(fitness_function, data, num_workers=num_workers)
+    task_queue, result_queue = create_fitness_queue(fitness_function, data, num_workers=num_workers,
+                                                    temp_actions_path=temp_actions_path)
 
     quant_options = reader.get_equipment_vector_quant_options(weapons_data, artifacts_data, actions['team'])
     vector_length = len(quant_options)

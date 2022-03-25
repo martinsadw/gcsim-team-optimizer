@@ -46,6 +46,13 @@ def main():
     weapon.upgrade_weapons(weapons_data)
     artifact.upgrade_artifacts(artifacts_data)
 
+    # # Substat gradient
+    # data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
+    # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
+    # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
+    # stats.sub_stats_gradient(data, team_vector)
+
+    # # Artifact set count
     # good_filename_2 = 'data/data_2.json'
     # with open(good_filename_2) as good_file_2:
     #     good_data_2 = json.load(good_file_2)
@@ -94,6 +101,6 @@ if __name__ == '__main__':
     start = time.perf_counter()
     main()
     duration = time.perf_counter() - start
-    print('Execution duration: {h:d}:{m:02d}:{s:.3f}'.format(h=int(duration / 3600),
-                                                             m=int((duration % 3600) / 60),
-                                                             s=duration % 60))
+    print('Execution duration: {h:d}:{m:02d}:{s:06.3f}'.format(h=int(duration / 3600),
+                                                               m=int((duration % 3600) / 60),
+                                                               s=duration % 60))

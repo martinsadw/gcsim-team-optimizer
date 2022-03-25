@@ -1,9 +1,12 @@
+import math
+import os
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from artifact_data import artifact_set_readable_short,  artifact_set_readable
+from artifact_data import artifact_set_readable_short,  artifact_set_readable, artifact_max_sub_stat
+from gcsim_utils import create_gcsim_file, run_team
 import reader
 
 
@@ -82,3 +85,52 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
         ax.set_title(f'Number of artifacts by {weight_function.__name__}()')
     fig.tight_layout()
     plt.show()
+
+
+def sub_stats_gradient(data, vector, iterations=1000):
+    characters_data, weapons_data, artifacts_data, actions = data
+
+    temp_actions_path = os.path.join('actions', 'temp_sub_stats')
+    os.makedirs(temp_actions_path, exist_ok=True)
+
+    temp_actions_filename = os.path.join(temp_actions_path, 'base.txt')
+    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
+    create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
+    base_dps = run_team(temp_actions_filename)
+    # print('Base dps:', base_dps['mean'])
+    # print('Std. dev.:', base_dps['std'])
+    # print('Error:', float(base_dps['std']) / math.sqrt(iterations))
+
+    sub_stat_rarity = 5
+    sub_stat_multiplier = 2
+
+    # Finite Difference Coefficients Calculator
+    # https://web.media.mit.edu/~crtaylor/calculator.html
+    calculation_points = [0, 1]
+    points_coefficients = [-1, 1]
+    # calculation_points = [-1, 1]
+    # points_coefficients = [-1/2, 1/2]
+    for i, character in enumerate(actions['team']):
+        for sub_stat, sub_stat_values in artifact_max_sub_stat.items():
+            mean_deviation = 0
+            for point, coefficient in zip(calculation_points, points_coefficients):
+                # The point 0 don't need to be recalculated every time for each substat
+                if point == 0:
+                    mean_deviation += float(base_dps['mean']) * coefficient
+                    continue
+
+                point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
+                temp_actions_filename = os.path.join(temp_actions_path, character + '_' + point_str + '_' + sub_stat + '.txt')
+                team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
+                                                            actions['team'], vector)
+
+                team_info[i]['extra_stats'] = {
+                    sub_stat: sub_stat_values[str(sub_stat_rarity)] * sub_stat_multiplier * point
+                }
+
+                create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
+                dps = float(run_team(temp_actions_filename)['mean'])
+                mean_deviation += dps * coefficient
+
+            mean_deviation /= sub_stat_multiplier
+            print(f'{character:18} {sub_stat:10} {mean_deviation:8.2f}')

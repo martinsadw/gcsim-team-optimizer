@@ -48,6 +48,14 @@ def character_to_gcsim(character_info):
     sub_stats += '; #subs\n'
     result += sub_stats
 
+    # Additional stats
+    if 'extra_stats' in character_info:
+        extra_stats = '{name} add stats'.format(name=character_name)
+        for stats_key, stats_value in character_info['extra_stats'].items():
+            extra_stats += ' {key}={value:.2f}'.format(key=good_to_gcsim_stats[stats_key], value=stats_value)
+        extra_stats += '; #extra\n'
+        result += extra_stats
+
     return result
 
 
@@ -73,7 +81,7 @@ def create_gcsim_file(team_info, actions, filename, iterations=1000):
 def run_team(gcsim_filename):
     gcsim_exec_path = os.path.join('.', 'gcsim')
 
-    dps_regex = r"resulting in (?P<mean>[\d\.]+) dps \(min: (?P<min_dps>[\d\.]+) max: (?P<max_dps>[\d\.]+) std: (?P<std>[\d\.]+)\)"
+    dps_regex = r"resulting in (?P<mean>-?[\d\.]+) dps \(min: (?P<min_dps>-?[\d\.]+) max: (?P<max_dps>-?[\d\.]+) std: (?P<std>-?[\d\.]+)\)"
     gcsim_result = subprocess.run([gcsim_exec_path, '-c', gcsim_filename], capture_output=True)
     dps = re.search(dps_regex, gcsim_result.stdout.decode('utf-8'), re.MULTILINE)
 
@@ -84,7 +92,8 @@ def run_team(gcsim_filename):
     return dps
 
 
-def gcsim_fitness(vector, data, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None, stats=None):
+def gcsim_fitness(vector, data, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None, stats=None,
+                  temp_actions_path=None):
     cache_key = tuple(vector)
     if fitness_cache is not None:
         if cache_key in fitness_cache:
@@ -103,8 +112,11 @@ def gcsim_fitness(vector, data, iterations=10, force_write=False, validation_pen
         if validation_penalty >= 1:
             return 0
 
-    temp_gcsim_path = os.path.join('actions', 'temp_gcsim')
-    gcsim_filename = os.path.join(temp_gcsim_path, '_'.join([str(x) for x in vector]) + '.txt')
+    if temp_actions_path is None:
+        temp_actions_path = os.path.join('actions', 'temp_gcsim')
+        os.makedirs(temp_actions_path, exist_ok=True)
+
+    gcsim_filename = os.path.join(temp_actions_path, '_'.join([str(x) for x in vector]) + '.txt')
     if force_write or not os.path.exists(gcsim_filename):
         create_gcsim_file(team_info, actions, gcsim_filename, iterations=iterations)
     fitness = run_team(gcsim_filename)
