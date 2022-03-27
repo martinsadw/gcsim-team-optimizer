@@ -27,12 +27,12 @@ def main():
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
     # TODO(andre): Allow to pass special parameters to the final gcsim file
-    # Examples:
-    # Hu Tao stating HP: 'start_hp=3000'
-    # Husk of Opulent Dreams initial stack: '+params=[stacks=4]'
+    #  Examples:
+    #  Hu Tao stating HP: 'start_hp=3000'
+    #  Husk of Opulent Dreams initial stack: '+params=[stacks=4]'
 
     # TODO(andre): Allow to change the default passive energy generation
-    # i.e. 'energy every interval=240,360 amount=1;'
+    #  i.e. 'energy every interval=240,360 amount=1;'
 
     with open(good_filename) as good_file:
         good_data = json.load(good_file)
@@ -46,11 +46,11 @@ def main():
     weapon.upgrade_weapons(weapons_data)
     artifact.upgrade_artifacts(artifacts_data)
 
-    # # Substat gradient
+    # Substat gradient
     # data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
-    # stats.sub_stats_gradient(data, team_vector)
+    # team_gradient = stats.sub_stats_gradient(data, team_vector, iterations=1000)
 
     # # Artifact set count
     # good_filename_2 = 'data/data_2.json'
@@ -80,6 +80,7 @@ def main():
     # # Validation
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
     #                                      actions_dict[team_name]['team'])
+    # print(team_vector)
     # print(reader.validate_team(actions_dict[team_name]['team'], team_vector))
 
     # # Team Reader
@@ -98,6 +99,12 @@ def main():
 
 
 if __name__ == '__main__':
+    # TODO(andre): Instead of consulting the cache to prevent a gcsim execution, the result should rerun and update the
+    #  cache with a new average
+    # TODO(andre): Instead of using the last population for the final gcsim execution, the result should use the best
+    #  individuals found so far. Idealy, all individuals within the standard error should be rerun.
+    # TODO(andre): Use an artifact's main stat in the score calculation
+    # TODO(andre): Improve the search to take artifact sets in consideration
     start = time.perf_counter()
     main()
     duration = time.perf_counter() - start

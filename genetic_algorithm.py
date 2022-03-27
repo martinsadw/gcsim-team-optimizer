@@ -5,6 +5,7 @@ import random
 import numpy as np
 
 import reader
+import stats
 
 
 def fitness_worker(task_queue, result_queue, fitness_function, data, temp_actions_path=None):
@@ -32,8 +33,13 @@ def create_fitness_queue(fitness_function, data, num_workers=1, temp_actions_pat
     return task_queue, result_queue
 
 
+def generate_individual(weights):
+    individual = np.array([random.choices(range(len(weight)), weight, k=1)[0] for weight in weights])
+    return individual
+
+
 def genetic_algorithm(data, fitness_function, num_workers=2):
-    stats = dict()
+    stats_dict = dict()
 
     characters_data, weapons_data, artifacts_data, actions = data
 
@@ -56,9 +62,23 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
     population_size = 200
     selection_size = 40
     validation_penalty = 1
+    gradient_update_frequency = 50
 
-    population = np.array([[random.randrange(quant) for quant in quant_options] for i in range(population_size)])
+    #############
+
+    # # Generate population uniformly
+    # population = np.array([[random.randrange(quant) for quant in quant_options] for i in range(population_size)])
+    # population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
+
+    # Generate population with gradient
+    population = np.empty((population_size, len(quant_options)), dtype=int)
     population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
+    print('Calculating team gradient...')
+    team_gradient = stats.sub_stats_gradient(data, population[0], iterations=1000)
+    equipments_score = reader.get_equipment_vector_weighted_options(data, team_gradient)
+    population[1:] = [generate_individual(equipments_score) for _ in range(1, population_size)]
+
+    #############
 
     fitness = np.empty((population_size,))
     for j in range(population_size):
@@ -82,6 +102,11 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
     for i in range(num_iterations):
         print('Iteration {i}/{max} ({percent:.2f}%)'
               .format(i=i, max=num_iterations, percent=(i / num_iterations) * 100))
+
+        if (i + 1) % gradient_update_frequency == 0:
+            print('Recalculating team gradient...')
+            team_gradient = stats.sub_stats_gradient(data, population[0], iterations=1000)
+            equipments_score = reader.get_equipment_vector_weighted_options(data, team_gradient)
 
         new_population = population.copy()
         new_fitness = fitness.copy()
@@ -121,11 +146,12 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
 
             #############
 
+            # mutation = np.array([random.randrange(quant) for quant in quant_options])
+            mutation = generate_individual(equipments_score)
+
             # # Random mutation
             # mutation_chance = 0.025
             # mutation_mask = (np.random.rand(vector_length) < mutation_chance)
-            # mutation = np.array([random.randrange(quant) for quant in quant_options])
-            #
             # new_individual = np.choose(mutation_mask, [new_individual, mutation])
 
             # Per character mutation
@@ -133,9 +159,9 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
             character_mask = (r >= c * character_length) & (r < (c + 1) * character_length)
             mutation_chance = 0.1
             mutation_mask = (np.random.rand(vector_length) < mutation_chance) & character_mask
-            mutation = np.array([random.randrange(quant) for quant in quant_options])
-
             new_individual = np.choose(mutation_mask, [new_individual, mutation])
+
+            #############
 
             new_population[j] = new_individual
 
@@ -164,8 +190,8 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
 
         population = new_population
         fitness = new_fitness
-        # print('Quant evaluations:', stats.get('evaluation', 0))
-        # print('Quant invalid:', stats.get('invalid', 0))
+        # print('Quant evaluations:', stats_dict.get('evaluation', 0))
+        # print('Quant invalid:', stats_dict.get('invalid', 0))
         print('Partial Fitness:', best_fitness)
         print('Partial Build:', best_vector)
 
@@ -186,6 +212,8 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
     print('Final Build:', population[0])
 
     # Kill all process
+    # TODO(andre): Organize better when process are created and destroyed
+    #  Right now the processes are left alive if the code breaks
     for i in range(num_workers):
         task_queue.put(None)
 

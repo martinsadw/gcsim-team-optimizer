@@ -1,4 +1,7 @@
 import math
+from collections import defaultdict
+
+import artifact
 
 from artifact_data import percent_stats
 from character_data import character_weapon_type_map
@@ -197,11 +200,11 @@ def get_team_build_by_vector(characters_data, weapons_data, artifacts_data, team
 def get_equipment_vector_quant_options(weapons_data, artifacts_data, team_list):
     weapons_types = [character_weapon_type_map[name] for name in team_list]
     artifacts_quant_options = [
-        min(len(artifacts_data['flower']), 60),
-        min(len(artifacts_data['plume']), 60),
-        min(len(artifacts_data['sands']), 60),
-        min(len(artifacts_data['goblet']), 60),
-        min(len(artifacts_data['circlet']), 60),
+        len(artifacts_data['flower']),
+        len(artifacts_data['plume']),
+        len(artifacts_data['sands']),
+        len(artifacts_data['goblet']),
+        len(artifacts_data['circlet']),
     ]
 
     quant_options = []
@@ -210,6 +213,27 @@ def get_equipment_vector_quant_options(weapons_data, artifacts_data, team_list):
         quant_options.extend(artifacts_quant_options)
 
     return quant_options
+
+
+def get_equipment_vector_weighted_options(data, team_gradient):
+    characters_data, weapons_data, artifacts_data, actions = data
+
+    equipments_score = []
+
+    for i, weights in enumerate(team_gradient):
+        normalized_weights = defaultdict(int)
+        weights_max = max(weights.values())
+        for key, value in weights.items():
+            normalized_weights[key] = value / weights_max
+
+        weapon_type = character_weapon_type_map[actions['team'][i]]
+        equipments_score.append([1 for _ in weapons_data[weapon_type]])
+
+        for artifacts in artifacts_data.values():
+            scores = [artifact.artifact_score(artifact_piece, normalized_weights) for artifact_piece in artifacts]
+            equipments_score.append(scores)
+
+    return equipments_score
 
 
 def validate_team(team_list, equipment_vector):

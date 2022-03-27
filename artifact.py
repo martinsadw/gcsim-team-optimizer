@@ -69,3 +69,13 @@ def artifact_quality(artifact_piece):
     for key, sub_stat in artifact_piece['sub_stats'].items():
         quality += float(sub_stat) / artifact_max_sub_stat[key][str(artifact_piece['rarity'])]
     return quality / 9
+
+
+def artifact_score(artifact_piece, normalized_weights):
+    quality = 0
+    for key, sub_stat in artifact_piece['sub_stats'].items():
+        max_value = artifact_max_sub_stat[key][str(artifact_piece['rarity'])]
+        quality += (float(sub_stat) / max_value) * normalized_weights[key]
+
+    epsilon = 0.01
+    return max(quality, epsilon)

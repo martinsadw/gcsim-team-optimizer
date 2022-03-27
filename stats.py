@@ -90,6 +90,8 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
 def sub_stats_gradient(data, vector, iterations=1000):
     characters_data, weapons_data, artifacts_data, actions = data
 
+    team_gradient = []
+
     temp_actions_path = os.path.join('actions', 'temp_sub_stats')
     os.makedirs(temp_actions_path, exist_ok=True)
 
@@ -111,16 +113,18 @@ def sub_stats_gradient(data, vector, iterations=1000):
     # calculation_points = [-1, 1]
     # points_coefficients = [-1/2, 1/2]
     for i, character in enumerate(actions['team']):
+        character_gradient = dict()
         for sub_stat, sub_stat_values in artifact_max_sub_stat.items():
-            mean_deviation = 0
+            deviation = 0
             for point, coefficient in zip(calculation_points, points_coefficients):
                 # The point 0 don't need to be recalculated every time for each substat
                 if point == 0:
-                    mean_deviation += float(base_dps['mean']) * coefficient
+                    deviation += float(base_dps['mean']) * coefficient
                     continue
 
                 point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
-                temp_actions_filename = os.path.join(temp_actions_path, character + '_' + point_str + '_' + sub_stat + '.txt')
+                filename = character + '_' + point_str + '_' + sub_stat + '.txt'
+                temp_actions_filename = os.path.join(temp_actions_path, filename)
                 team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
                                                             actions['team'], vector)
 
@@ -130,7 +134,12 @@ def sub_stats_gradient(data, vector, iterations=1000):
 
                 create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
                 dps = float(run_team(temp_actions_filename)['mean'])
-                mean_deviation += dps * coefficient
+                deviation += dps * coefficient
 
-            mean_deviation /= sub_stat_multiplier
-            print(f'{character:18} {sub_stat:10} {mean_deviation:8.2f}')
+            deviation /= sub_stat_multiplier
+            # print(f'{character:18} {sub_stat:10} {deviation:8.2f}')
+            character_gradient[sub_stat] = deviation
+
+        team_gradient.append(character_gradient)
+
+    return team_gradient
