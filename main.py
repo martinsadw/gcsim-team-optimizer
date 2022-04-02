@@ -107,7 +107,6 @@ if __name__ == '__main__':
     #  cache with a new average
     # TODO(andre): Instead of using the last population for the final gcsim execution, the result should use the best
     #  individuals found so far. Idealy, all individuals within the standard error should be rerun.
-    # TODO(andre): Use an artifact's main stat in the score calculation
     # TODO(andre): Improve the search to take artifact sets in consideration
     start = time.perf_counter()
     main()

@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import random
+from pprint import pprint
 
 import numpy as np
 
@@ -75,6 +76,7 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
     population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
     print('Calculating team gradient...')
     team_gradient = stats.sub_stats_gradient(data, population[0], iterations=1000)
+    pprint(team_gradient)
     equipments_score = reader.get_equipment_vector_weighted_options(data, team_gradient)
     population[1:] = [generate_individual(equipments_score) for _ in range(1, population_size)]
 
@@ -106,6 +108,7 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
         if (i + 1) % gradient_update_frequency == 0:
             print('Recalculating team gradient...')
             team_gradient = stats.sub_stats_gradient(data, population[0], iterations=1000)
+            pprint(team_gradient)
             equipments_score = reader.get_equipment_vector_weighted_options(data, team_gradient)
 
         new_population = population.copy()
