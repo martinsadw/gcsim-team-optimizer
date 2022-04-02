@@ -18,6 +18,7 @@ character_weapon_type_map = {
     'KaedeharaKazuha': 'sword',
     'Kaeya': 'sword',
     'KamisatoAyaka': 'sword',
+    'KamisatoAyato': 'sword',
     'Keqing': 'sword',
     'Klee': 'catalyst',
     'KujouSara': 'bow',

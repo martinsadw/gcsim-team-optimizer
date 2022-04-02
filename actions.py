@@ -208,3 +208,53 @@ raiden burst,attack:3,charge,attack:3,charge,attack:3,charge;
 restart;
 '''
 }
+
+actions_dict['ayato_overvape'] = {
+  'team': ['Fischl', 'Bennett', 'Xiangling', 'KamisatoAyato'],
+  'simulation_length': 100,
+  'mode': 'sl',
+  'actions': '''active bennett;
+
+bennett skill, burst;
+
+#attack ensures bennett buff is snapped onto Oz.
+fischl attack:2, skill, attack;
+
+ayato burst[radius=2];
+
+xiangling burst, attack, skill;
+
+ayato skill, attack:15;
+
+#attack ensures bennett buff is snapped onto Oz. Also NA weave for XQ Q
+fischl attack:2, burst;
+
+#stay on XL so that Fischl A4 procs for damage, and refreshes electro for XL to OL again. Bennett field is basically gone now.
+xiangling attack:4, dash, attack:4;
+
+xiangling skill;
+
+ayato skill, attack:15;
+
+restart;'''
+}
+
+actions_dict['ayato_electrocharge'] = {
+  'team': ['KamisatoAyato', 'Beidou', 'Fischl', 'KaedeharaKazuha'],
+  'simulation_length': 125,
+  'mode': 'sl',
+  'actions': '''active ayato;
+
+ayato burst;
+beidou skill;
+kazuha skill, high_plunge, burst;
+fischl skill;
+beidou burst, attack;
+ayato skill, attack:15;
+beidou attack, skill[counter=2], attack:2;
+kazuha attack, skill, high_plunge, attack;
+fischl attack, burst;
+ayato attack:2, dash, attack:2, skill, attack:15;
+
+restart;'''
+}

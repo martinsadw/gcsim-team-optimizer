@@ -21,9 +21,11 @@ def main():
     # team_name = 'hutao_xingqiu_albedo_zhongli'
     # team_name = 'hyper_raiden'
     # team_name = 'raiden_national'
-    team_name = 'kokomi_electrocharged'
+    # team_name = 'kokomi_electrocharged'
     # team_name = 'eula_shield'
     # team_name = 'eula_bennett'
+    # team_name = 'ayato_overvape'
+    team_name = 'ayato_electrocharge'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
     # TODO(andre): Allow to pass special parameters to the final gcsim file
@@ -45,6 +47,8 @@ def main():
     character.upgrade_characters(characters_data)
     weapon.upgrade_weapons(weapons_data)
     artifact.upgrade_artifacts(artifacts_data)
+
+    character.add_character(characters_data, 'KamisatoAyato')
 
     # Substat gradient
     # data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
