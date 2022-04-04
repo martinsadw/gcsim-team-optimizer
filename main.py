@@ -103,8 +103,10 @@ def main():
 
 
 if __name__ == '__main__':
-    # TODO(andre): Instead of consulting the cache to prevent a gcsim execution, the result should rerun and update the
-    #  cache with a new average
+    # BUG:(andre): Calculating the gradient of a build with error result in a gradient full of zeros. This gives an
+    #  error during normalization.
+    # TODO(andre): Add restrictions to the optimization (e.g. fix a 4 piece artifact set)
+    # TODO(andre): Allow the optimization of two teams simultaneously (e.g. for the two sides of the spiral abyss)
     # TODO(andre): Instead of using the last population for the final gcsim execution, the result should use the best
     #  individuals found so far. Idealy, all individuals within the standard error should be rerun.
     # TODO(andre): Improve the search to take artifact sets in consideration
