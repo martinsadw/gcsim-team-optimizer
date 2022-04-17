@@ -3,7 +3,7 @@
 Prepare environment
 
 - Install pip modules, i.e. `pip install -r requirements.txt`
-- Download GCSIM executable (gcsim.exe) to project root directory
+- Download GCSIM executable to project root directory, i.e. `python .\scripts\download_gcsim.py`
 
 Run project
 
@@ -14,4 +14,5 @@ Run project
 
 - Add linters
 - Add virtual env for dependencies
+- Usar poetry instead of pip
 - Receive team name via CLI arg
