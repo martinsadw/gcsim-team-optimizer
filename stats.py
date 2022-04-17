@@ -87,8 +87,8 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
     plt.show()
 
 
-def sub_stats_gradient(data, vector, iterations=1000):
-    characters_data, weapons_data, artifacts_data, actions = data
+def sub_stats_gradient(data, actions, vector, iterations=1000):
+    characters_data, weapons_data, artifacts_data = data
 
     team_gradient = []
 

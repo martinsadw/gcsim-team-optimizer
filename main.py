@@ -4,7 +4,7 @@ import time
 from pprint import pprint
 
 from gcsim_utils import gcsim_fitness
-from genetic_algorithm import genetic_algorithm
+from genetic_algorithm import GeneticAlgorithm
 from gcsim_utils import create_gcsim_file, run_team
 
 import artifact
@@ -50,11 +50,15 @@ def main():
 
     character.add_character(characters_data, 'KamisatoAyato')
 
-    # Substat gradient
-    # data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
+    ##########################
+
+    # # Substat gradient
+    # data = (characters_data, weapons_data, artifacts_data)
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
-    # team_gradient = stats.sub_stats_gradient(data, team_vector, iterations=1000)
+    # team_gradient = stats.sub_stats_gradient(data, actions_dict[team_name], team_vector, iterations=1000)
+
+    ##########################
 
     # # Artifact set count
     # good_filename_2 = 'data/data_2.json'
@@ -63,15 +67,20 @@ def main():
     # stats.plot_set_count([good_data, good_data_2], ['Data 1', 'Data 2'],
     #                      artifact.artifact_quality, thresholds=[0.9, 0.8, 0.7, 0.6, 0.5])
 
-    # Genetic Algorithm
-    data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
-    build_vector, fitness = genetic_algorithm(data, gcsim_fitness)
-    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
-                                                actions_dict[team_name]['team'], build_vector)
-    pprint(team_info)
+    ##########################
 
-    print('Best DPS:', fitness)
-    print('Build:', build_vector)
+    # # Genetic Algorithm Class
+    # data = (characters_data, weapons_data, artifacts_data)
+    # ga = GeneticAlgorithm(data, gcsim_fitness)
+    # build_vector, fitness = ga.run(actions_dict[team_name])
+    # team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
+    #                                             actions_dict[team_name]['team'], build_vector)
+    # pprint(team_info)
+    #
+    # print('Best DPS:', fitness)
+    # print('Build:', build_vector)
+
+    ##########################
 
     # # Team Vector
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
@@ -81,17 +90,23 @@ def main():
     #                                             actions_dict[team_name]['team'], team_vector)
     # pprint(team_info)
 
+    ##########################
+
     # # Validation
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
     #                                      actions_dict[team_name]['team'])
     # print(team_vector)
     # print(reader.validate_team(actions_dict[team_name]['team'], team_vector))
 
+    ##########################
+
     # # Team Reader
     # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
     # dps = run_team(gcsim_filename)
     # print(dps['mean'])
+
+    ##########################
 
     # # Check Vector
     # team_vector = [0, 20, 7, 20, 0, 21, 5, 29, 25, 32, 11, 16, 5, 21, 32, 12, 18, 14, 1, 12, 26, 13, 32, 10]
@@ -103,6 +118,8 @@ def main():
 
 
 if __name__ == '__main__':
+    # BUG:(andre): Adding a new character should automaticaly equip a weapon since it's impossible to have a character
+    #  with no weapon in game.
     # BUG:(andre): Calculating the gradient of a build with error result in a gradient full of zeros. This gives an
     #  error during normalization.
     # TODO(andre): Add restrictions to the optimization (e.g. fix a 4 piece artifact set)

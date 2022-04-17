@@ -68,10 +68,10 @@ def create_gcsim_file(team_info, actions, filename, iterations=1000):
         file.write('\n')
 
         file.write('# Simulation Config\n')
-        file.write('options debug=true iteration={iterations} duration={duration} workers=30 mode={mode};\n'.format(
+        file.write('options swap_delay=12 debug=true iteration={iterations} duration={duration} workers=30 mode={mode};\n'.format(
             iterations=iterations, duration=actions['simulation_length'], mode=actions['mode']))
         file.write('target lvl=100 resist=.1;\n')
-        file.write('energy every interval=240,360 amount=1;\n')
+        file.write('energy every interval=480,720 amount=1;\n')
         file.write('\n\n')
 
         file.write('# Actions\n')
@@ -92,14 +92,14 @@ def run_team(gcsim_filename):
     return dps
 
 
-def gcsim_fitness(vector, data, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None, stats=None,
-                  temp_actions_path=None):
+def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None,
+                  stats=None, temp_actions_path=None):
     cache_key = tuple(vector)
     if fitness_cache is not None:
         if cache_key in fitness_cache:
             return fitness_cache[cache_key]
 
-    characters_data, weapons_data, artifacts_data, actions = data
+    characters_data, weapons_data, artifacts_data = data
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
 
     is_team_valid = reader.validate_team(actions['team'], vector)

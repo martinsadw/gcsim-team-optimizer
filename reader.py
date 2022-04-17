@@ -215,8 +215,8 @@ def get_equipment_vector_quant_options(weapons_data, artifacts_data, team_list):
     return quant_options
 
 
-def get_equipment_vector_weighted_options(data, team_gradient):
-    characters_data, weapons_data, artifacts_data, actions = data
+def get_equipment_vector_weighted_options(data, actions, team_gradient):
+    characters_data, weapons_data, artifacts_data = data
 
     equipments_score = []
 
