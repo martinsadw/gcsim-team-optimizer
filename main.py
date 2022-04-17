@@ -1,8 +1,7 @@
+import datetime
 import json
 import os
 import time
-import datetime
-from pprint import pprint
 
 from gcsim_utils import gcsim_fitness
 from genetic_algorithm import genetic_algorithm
@@ -80,8 +79,11 @@ def main():
         json_object = json.dumps(team_info, indent=4)
         build_file.write(json_object)
 
-    print('Best DPS:', fitness)
-    print('Build:', build_vector)
+    with open(os.path.join(output_dir, 'metadata.txt'), 'w') as metadata_file:
+        metadata_file.writelines([
+            'Best DPS: {}\n'.format(fitness),
+            'Build: {}\n'.format(build_vector)
+        ])
 
     # # Team Vector
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
