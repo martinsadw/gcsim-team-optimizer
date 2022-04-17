@@ -59,14 +59,14 @@ def genetic_algorithm(data, fitness_function, num_workers=2, output_dir='output'
     character_length = 6
     quant_characters = int(vector_length / character_length)
 
-    num_iterations = 1
+    num_iterations = 500
     population_size = 200
     selection_size = 40
     validation_penalty = 1
     gradient_update_frequency = 50
-    evaluation_iterations = 1
-    gradient_iterations = 10
-    final_iterations = 10
+    evaluation_iterations = 10
+    gradient_iterations = 1000
+    final_iterations = 1000
 
     #############
 

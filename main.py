@@ -23,7 +23,7 @@ def main():
     # team_name = 'kokomi_electrocharged'
     # team_name = 'eula_shield'
     # team_name = 'eula_bennett'
-    team_name = 'ayato_overvape'
+    # team_name = 'ayato_overvape'
     # team_name = 'ayato_electrocharge'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
