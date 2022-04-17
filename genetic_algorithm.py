@@ -1,3 +1,4 @@
+import json
 import multiprocessing
 import os
 import random
@@ -78,7 +79,12 @@ def genetic_algorithm(data, fitness_function, num_workers=2, output_dir='output'
     population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
     print('Calculating team gradient...')
     team_gradient = stats.sub_stats_gradient(data, population[0], iterations=gradient_iterations, output_dir=output_dir)
-    pprint(team_gradient)
+
+    with open(os.path.join(output_dir, 'gradient.json'), 'w') as gradient_file:
+        gradient_data = dict(zip(actions['team'], team_gradient))
+        json_object = json.dumps(gradient_data, indent=4)
+        gradient_file.write(json_object)
+
     equipments_score = reader.get_equipment_vector_weighted_options(data, team_gradient)
     population[1:] = [generate_individual(equipments_score) for _ in range(1, population_size)]
 
