@@ -40,12 +40,12 @@ def generate_individual(weights):
     return individual
 
 
-def genetic_algorithm(data, fitness_function, num_workers=2):
+def genetic_algorithm(data, fitness_function, num_workers=2, output_dir='output'):
     stats_dict = dict()
 
     characters_data, weapons_data, artifacts_data, actions = data
 
-    temp_actions_path = os.path.join('actions', 'temp_gcsim')
+    temp_actions_path = os.path.join(output_dir, 'temp_gcsim')
     os.makedirs(temp_actions_path, exist_ok=True)
 
     fitness_cache = defaultdict(int)
@@ -58,14 +58,14 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
     character_length = 6
     quant_characters = int(vector_length / character_length)
 
-    num_iterations = 500
+    num_iterations = 1
     population_size = 200
     selection_size = 40
     validation_penalty = 1
     gradient_update_frequency = 50
-    evaluation_iterations = 10
-    gradient_iterations = 1000
-    final_iterations = 1000
+    evaluation_iterations = 1
+    gradient_iterations = 10
+    final_iterations = 10
 
     #############
 
@@ -77,7 +77,7 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
     population = np.empty((population_size, len(quant_options)), dtype=int)
     population[0] = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
     print('Calculating team gradient...')
-    team_gradient = stats.sub_stats_gradient(data, population[0], iterations=gradient_iterations)
+    team_gradient = stats.sub_stats_gradient(data, population[0], iterations=gradient_iterations, output_dir=output_dir)
     pprint(team_gradient)
     equipments_score = reader.get_equipment_vector_weighted_options(data, team_gradient)
     population[1:] = [generate_individual(equipments_score) for _ in range(1, population_size)]
@@ -112,7 +112,7 @@ def genetic_algorithm(data, fitness_function, num_workers=2):
 
         if (i + 1) % gradient_update_frequency == 0:
             print('Recalculating team gradient...')
-            team_gradient = stats.sub_stats_gradient(data, population[0], iterations=gradient_iterations)
+            team_gradient = stats.sub_stats_gradient(data, population[0], iterations=gradient_iterations, output_dir=output_dir)
             pprint(team_gradient)
             equipments_score = reader.get_equipment_vector_weighted_options(data, team_gradient)
 

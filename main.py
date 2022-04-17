@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import datetime
 from pprint import pprint
 
 from gcsim_utils import gcsim_fitness
@@ -15,7 +16,6 @@ import weapon
 
 from actions import actions_dict
 
-
 def main():
     good_filename = 'data/data.json'
     # team_name = 'hutao_xingqiu_albedo_zhongli'
@@ -24,9 +24,16 @@ def main():
     # team_name = 'kokomi_electrocharged'
     # team_name = 'eula_shield'
     # team_name = 'eula_bennett'
-    # team_name = 'ayato_overvape'
-    team_name = 'ayato_electrocharge'
+    team_name = 'ayato_overvape'
+    # team_name = 'ayato_electrocharge'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
+
+    team_slug = '-'.join(actions_dict[team_name]['team'])
+    output_dir = os.path.join('output', '{}_{}'.format(
+        datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+        team_slug
+    ))
+    os.makedirs(output_dir)
 
     # TODO(andre): Allow to pass special parameters to the final gcsim file
     #  Examples:
@@ -54,7 +61,7 @@ def main():
     # data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
     # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
-    # team_gradient = stats.sub_stats_gradient(data, team_vector, iterations=1000)
+    # team_gradient = stats.sub_stats_gradient(data, team_vector, iterations=1000, output_dir=output_dir)
 
     # # Artifact set count
     # good_filename_2 = 'data/data_2.json'
@@ -65,9 +72,10 @@ def main():
 
     # Genetic Algorithm
     data = (characters_data, weapons_data, artifacts_data, actions_dict[team_name])
-    build_vector, fitness = genetic_algorithm(data, gcsim_fitness)
+    build_vector, fitness = genetic_algorithm(data, gcsim_fitness, output_dir=output_dir)
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
                                                 actions_dict[team_name]['team'], build_vector)
+
     pprint(team_info)
 
     print('Best DPS:', fitness)

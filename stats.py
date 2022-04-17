@@ -87,12 +87,12 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
     plt.show()
 
 
-def sub_stats_gradient(data, vector, iterations=1000):
+def sub_stats_gradient(data, vector, iterations=1000, output_dir='output'):
     characters_data, weapons_data, artifacts_data, actions = data
 
     team_gradient = []
 
-    temp_actions_path = os.path.join('actions', 'temp_sub_stats')
+    temp_actions_path = os.path.join(output_dir, 'temp_sub_stats')
     os.makedirs(temp_actions_path, exist_ok=True)
 
     temp_actions_filename = os.path.join(temp_actions_path, 'base.txt')
