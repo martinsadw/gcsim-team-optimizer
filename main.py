@@ -76,7 +76,9 @@ def main():
     team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
                                                 actions_dict[team_name]['team'], build_vector)
 
-    pprint(team_info)
+    with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
+        json_object = json.dumps(team_info, indent=4)
+        build_file.write(json_object)
 
     print('Best DPS:', fitness)
     print('Build:', build_vector)
