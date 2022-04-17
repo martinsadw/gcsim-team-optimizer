@@ -7,6 +7,7 @@ Prepare environment
 
 Run project
 
+- Copy GOOD file to `.\data\data.json`
 - Change `team_name` variable in `main` function in `main.py` file
 - Execute project, i.e. `python main.py`
 
