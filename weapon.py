@@ -2,8 +2,8 @@ from weapon_data import weapon_type_map
 
 
 class Weapon:
-    def __init__(self, weapon, id):
-        self.id = id
+    def __init__(self, weapon, weapon_id):
+        self.id = weapon_id
         self.level = weapon['level']
         self.ascension = weapon['ascension']
         self.max_level = (20 + self.ascension * 20) if self.ascension <= 1 else (40 + (self.ascension - 1) * 10)

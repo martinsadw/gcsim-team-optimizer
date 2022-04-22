@@ -2,6 +2,7 @@ import math
 from collections import defaultdict
 
 from artifact import Artifact
+from character import Character
 from weapon import Weapon
 
 from character_data import character_weapon_type_map
@@ -44,21 +45,7 @@ def read_characters(good_data):
     characters_data = []
 
     for character_id, character in enumerate(good_data['characters']):
-        ascension = character['ascension']
-        max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
-        new_character = {
-            'id': character_id,
-            'level': character['level'],
-            'max_level': max_level,
-            'ascension': ascension,
-            'constellation': character['constellation'],
-            'talent_1': character['talent']['auto'],
-            'talent_2': character['talent']['skill'],
-            'talent_3': character['talent']['burst'],
-            'key': character['key']
-        }
-
-        characters_data.append(new_character)
+        characters_data.append(Character(character, character_id))
 
     return characters_data
 
@@ -104,7 +91,7 @@ def get_weapon_by_character(weapons_data, character_name):
 
 
 def get_character_by_name(characters_data, character_name):
-    character = next((x for x in characters_data if x['key'] == character_name))
+    character = next((x for x in characters_data if x.key == character_name))
 
     return character
 

@@ -10,15 +10,15 @@ import reader
 
 def character_to_gcsim(character_info):
     character = character_info['character']
-    character_name = character['key'].lower()
+    character_name = character.key.lower()
 
     weapon = character_info['weapon']
     weapon_name = weapon.key.lower()
 
     # Character base stats
     result = '{name} char lvl={level}/{max_level} cons={cons} talent={t1},{t2},{t3};\n'.format(
-        name=character_name, level=character['level'], max_level=character['max_level'],
-        cons=character['constellation'], t1=character['talent_1'], t2=character['talent_2'], t3=character['talent_3'])
+        name=character_name, level=character.level, max_level=character.max_level,
+        cons=character.constellation, t1=character.talent_1, t2=character.talent_2, t3=character.talent_3)
 
     # Character Weapon
     result += '{name} add weapon="{weapon}" refine={refine} lvl={level}/{max_level};\n'.format(

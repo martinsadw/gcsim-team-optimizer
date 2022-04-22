@@ -8,7 +8,7 @@ from genetic_algorithm import GeneticAlgorithm
 from gcsim_utils import create_gcsim_file, run_team
 
 from artifact import Artifact, artifact_quality
-import character
+from character import Character
 import reader
 import stats
 from weapon import Weapon
@@ -44,11 +44,11 @@ def main():
     artifacts_data = reader.read_artifacts(good_data)
 
     # Upgrade Characters and Equipments
-    character.upgrade_characters(characters_data)
+    Character.upgrade_characters(characters_data)
     Weapon.upgrade_weapons(weapons_data)
     Artifact.upgrade_artifacts(artifacts_data)
 
-    character.add_character(characters_data, 'KamisatoAyato')
+    Character.add_character(characters_data, 'KamisatoAyato')
 
     ##########################
 
