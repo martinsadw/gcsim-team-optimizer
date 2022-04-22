@@ -7,7 +7,6 @@ import numpy as np
 
 from artifact_data import artifact_set_readable_short,  artifact_set_readable, artifact_max_sub_stat
 from gcsim_utils import create_gcsim_file, run_team
-import reader
 
 
 def artifacts_set_count(artifacts_data, weight_function=None):
@@ -54,8 +53,7 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
     set_counts = []
     names = set()
     for good_data in data:
-        artifacts_data = reader.read_artifacts(good_data)
-        artifacts_set = artifacts_set_count_threshold(artifacts_data, thresholds, weight_function)
+        artifacts_set = artifacts_set_count_threshold(good_data.artifacts, thresholds, weight_function)
         set_counts.append(artifacts_set)
         names.update(artifacts_set.keys())
 
@@ -88,15 +86,13 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
 
 
 def sub_stats_gradient(data, actions, vector, iterations=1000):
-    characters_data, weapons_data, artifacts_data = data
-
     team_gradient = []
 
     temp_actions_path = os.path.join('actions', 'temp_sub_stats')
     os.makedirs(temp_actions_path, exist_ok=True)
 
     temp_actions_filename = os.path.join(temp_actions_path, 'base.txt')
-    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
+    team_info = data.get_team_build_by_vector(actions['team'], vector)
     create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
     base_dps = run_team(temp_actions_filename)
     # print('Base dps:', base_dps['mean'])
@@ -125,8 +121,7 @@ def sub_stats_gradient(data, actions, vector, iterations=1000):
                 point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
                 filename = character + '_' + point_str + '_' + sub_stat + '.txt'
                 temp_actions_filename = os.path.join(temp_actions_path, filename)
-                team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
-                                                            actions['team'], vector)
+                team_info = data.get_team_build_by_vector(actions['team'], vector)
 
                 team_info[i]['extra_stats'] = {
                     sub_stat: sub_stat_values[str(sub_stat_rarity)] * sub_stat_multiplier * point

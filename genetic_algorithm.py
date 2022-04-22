@@ -6,7 +6,6 @@ from pprint import pprint
 
 import numpy as np
 
-import reader
 import stats
 
 
@@ -167,20 +166,18 @@ class GeneticAlgorithm:
         return new_individual
 
     def run(self, actions):
-        characters_data, weapons_data, artifacts_data = self.data
-
         os.makedirs(self.temp_actions_path, exist_ok=True)
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
                                                                   num_workers=self.num_workers,
                                                                   temp_actions_path=self.temp_actions_path)
 
-        self.quant_options = reader.get_equipment_vector_quant_options(weapons_data, artifacts_data, actions['team'])
-        self.current_team = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions['team'])
+        self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
+        self.current_team = self.data.get_team_vector(actions['team'])
         print('Calculating team gradient...')
         self.team_gradient = stats.sub_stats_gradient(self.data, actions, self.current_team,
                                                       iterations=self.gradient_iterations)
         pprint(self.team_gradient)
-        self.equipments_score = reader.get_equipment_vector_weighted_options(self.data, actions, self.team_gradient)
+        self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
 
         population = self.generate_population()
         fitness = self.calculate_population_fitness(population)
@@ -200,8 +197,7 @@ class GeneticAlgorithm:
                 self.team_gradient = stats.sub_stats_gradient(self.data, actions, population[0],
                                                               iterations=self.gradient_iterations)
                 pprint(self.team_gradient)
-                self.equipments_score = reader.get_equipment_vector_weighted_options(self.data, actions,
-                                                                                     self.team_gradient)
+                self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
 
             new_population = population.copy()
             for j in range(self.selection_size, self.population_size):

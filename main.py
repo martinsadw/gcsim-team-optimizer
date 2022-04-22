@@ -7,11 +7,9 @@ from gcsim_utils import gcsim_fitness
 from genetic_algorithm import GeneticAlgorithm
 from gcsim_utils import create_gcsim_file, run_team
 
-from artifact import Artifact, artifact_quality
-from character import Character
-import reader
+from artifact import artifact_quality
+from good_utils import GoodData
 import stats
-from weapon import Weapon
 
 from actions import actions_dict
 
@@ -36,25 +34,17 @@ def main():
     # TODO(andre): Allow to change the default passive energy generation
     #  i.e. 'energy every interval=240,360 amount=1;'
 
-    with open(good_filename) as good_file:
-        good_data = json.load(good_file)
+    data = GoodData.from_filename(good_filename)
+    data.upgrade_artifacts()
+    data.upgrade_characters()
+    data.upgrade_weapons()
 
-    characters_data = reader.read_characters(good_data)
-    weapons_data = reader.read_weapons(good_data)
-    artifacts_data = reader.read_artifacts(good_data)
-
-    # Upgrade Characters and Equipments
-    Character.upgrade_characters(characters_data)
-    Weapon.upgrade_weapons(weapons_data)
-    Artifact.upgrade_artifacts(artifacts_data)
-
-    Character.add_character(characters_data, 'KamisatoAyato')
+    data.add_character('KamisatoAyato')
 
     ##########################
 
     # # Substat gradient
-    # data = (characters_data, weapons_data, artifacts_data)
-    # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
+    # team_vector = data.get_team_vector(actions_dict[team_name]['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
     # team_gradient = stats.sub_stats_gradient(data, actions_dict[team_name], team_vector, iterations=1000)
 
@@ -62,19 +52,16 @@ def main():
 
     # # Artifact set count
     # good_filename_2 = 'data/data_2.json'
-    # with open(good_filename_2) as good_file_2:
-    #     good_data_2 = json.load(good_file_2)
-    # stats.plot_set_count([good_data, good_data_2], ['Data 1', 'Data 2'],
+    # data_2 = GoodData.from_filename(good_filename_2)
+    # stats.plot_set_count([data, data_2], ['Data 1', 'Data 2'],
     #                      artifact_quality, thresholds=[0.9, 0.8, 0.7, 0.6, 0.5])
 
     ##########################
 
     # # Genetic Algorithm Class
-    # data = (characters_data, weapons_data, artifacts_data)
     # ga = GeneticAlgorithm(data, gcsim_fitness)
     # build_vector, fitness = ga.run(actions_dict[team_name])
-    # team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
-    #                                             actions_dict[team_name]['team'], build_vector)
+    # team_info = data.get_team_build_by_vector(actions_dict[team_name]['team'], build_vector)
     # pprint(team_info)
     #
     # print('Best DPS:', fitness)
@@ -83,25 +70,22 @@ def main():
     ##########################
 
     # # Team Vector
-    # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
-    #                                      actions_dict[team_name]['team'])
+    # team_vector = data.get_team_vector(actions_dict[team_name]['team'])
     # print(team_vector)
-    # team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
-    #                                             actions_dict[team_name]['team'], team_vector)
+    # team_info = data.get_team_build_by_vector(actions_dict[team_name]['team'], team_vector)
     # pprint(team_info)
 
     ##########################
 
     # # Validation
-    # team_vector = reader.get_team_vector(characters_data, weapons_data, artifacts_data,
-    #                                      actions_dict[team_name]['team'])
+    # team_vector = data.get_team_vector(actions_dict[team_name]['team'])
     # print(team_vector)
-    # print(reader.validate_team(actions_dict[team_name]['team'], team_vector))
+    # print(data.validate_team(actions_dict[team_name]['team'], team_vector))
 
     ##########################
 
     # # Team Reader
-    # team_info = reader.get_team_build(characters_data, weapons_data, artifacts_data, actions_dict[team_name]['team'])
+    # team_info = data.get_team_build(actions_dict[team_name]['team'])
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
     # dps = run_team(gcsim_filename)
     # print(dps['mean'])
@@ -110,8 +94,7 @@ def main():
 
     # # Check Vector
     # team_vector = [0, 20, 7, 20, 0, 21, 5, 29, 25, 32, 11, 16, 5, 21, 32, 12, 18, 14, 1, 12, 26, 13, 32, 10]
-    # team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data,
-    #                                             actions_dict[team_name]['team'], team_vector)
+    # team_info = data.get_team_build_by_vector(actions_dict[team_name]['team'], team_vector)
     # create_gcsim_file(team_info, actions_dict[team_name], gcsim_filename, iterations=100)
     # dps = run_team(gcsim_filename)
     # print(dps['mean'])

@@ -5,8 +5,6 @@ import subprocess
 from artifact import Artifact
 from gcsim_names import good_to_gcsim_stats
 
-import reader
-
 
 def character_to_gcsim(character_info):
     character = character_info['character']
@@ -99,10 +97,9 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, valid
         if cache_key in fitness_cache:
             return fitness_cache[cache_key]
 
-    characters_data, weapons_data, artifacts_data = data
-    team_info = reader.get_team_build_by_vector(characters_data, weapons_data, artifacts_data, actions['team'], vector)
+    team_info = data.get_team_build_by_vector(actions['team'], vector)
 
-    is_team_valid = reader.validate_team(actions['team'], vector)
+    is_team_valid = data.validate_team(actions['team'], vector)
     if not is_team_valid:
         if stats is not None:
             if 'invalid' not in stats:

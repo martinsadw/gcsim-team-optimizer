@@ -106,12 +106,6 @@ class Artifact:
 
         return stats
 
-    @staticmethod
-    def upgrade_artifacts(artifacts_data):
-        for artifacts_piece in artifacts_data.values():
-            for artifact in artifacts_piece:
-                artifact.upgrade()
-
 
 def artifact_quality(artifact):
     return artifact.calculate_quality()

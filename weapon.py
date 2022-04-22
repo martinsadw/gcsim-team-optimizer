@@ -16,9 +16,3 @@ class Weapon:
         self.level = 90
         self.max_level = 90
         self.ascension = 6
-
-    @staticmethod
-    def upgrade_weapons(weapons_data):
-        for weapons_type in weapons_data.values():
-            for weapon in weapons_type:
-                weapon.upgrade()

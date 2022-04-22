@@ -17,22 +17,3 @@ class Character:
         self.talent_1 = 9
         self.talent_2 = 9
         self.talent_3 = 9
-
-    @staticmethod
-    def upgrade_characters(characters_data):
-        for character in characters_data:
-            character.upgrade()
-
-    @staticmethod
-    def add_character(characters_data, character_name, constellation=0):
-        characters_data.append(Character({
-            'level': 90,
-            'ascension': 6,
-            'constellation': constellation,
-            'talent': {
-                'auto': 9,
-                'skill': 9,
-                'burst': 9,
-            },
-            'key': character_name
-        }, len(characters_data)))
