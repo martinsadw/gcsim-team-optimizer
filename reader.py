@@ -1,9 +1,8 @@
 import math
 from collections import defaultdict
 
-import artifact
+from artifact import Artifact
 
-from artifact_data import percent_stats
 from character_data import character_weapon_type_map
 from weapon_data import weapon_type_map
 
@@ -18,26 +17,8 @@ def read_artifacts(good_data):
     }
 
     for artifact in good_data['artifacts']:
-        new_artifact = {
-            'id': artifact['Id'],
-            'level': artifact['level'],
-            'rarity': artifact['rarity'],
-            'set_key': artifact['setKey'],
-            'main_stat_key': artifact['mainStatKey'],
-            'sub_stats': {},
-            'empty_sub_stats': 0,
-            'missing_sub_stats': math.ceil((20 - artifact['level']) / 4),
-            'location': artifact['location']
-        }
-        for sub_stat in artifact['substats']:
-            if sub_stat['key'] is None:
-                new_artifact['empty_sub_stats'] += 1
-            elif sub_stat['key'] in percent_stats:
-                new_artifact['sub_stats'][sub_stat['key']] = sub_stat['value'] / 100
-            else:
-                new_artifact['sub_stats'][sub_stat['key']] = sub_stat['value']
-
-        artifact_data[artifact['slotKey']].append(new_artifact)
+        slot_key = artifact['slotKey']
+        artifact_data[slot_key].append(Artifact(artifact))
 
     return artifact_data
 
@@ -95,7 +76,7 @@ def read_characters(good_data):
 
 def get_artifact_piece_by_character(artifacts_data, artifact_type, character_name):
     for artifact in artifacts_data[artifact_type]:
-        if artifact['location'] == character_name:
+        if artifact.location == character_name:
             return artifact
 
     return None
@@ -170,7 +151,7 @@ def get_team_vector(characters_data, weapons_data, artifacts_data, team_list):
 
         for j, artifact_type in enumerate(['flower', 'plume', 'sands', 'goblet', 'circlet']):
             for k, artifact in enumerate(artifacts_data[artifact_type]):
-                if artifact['location'] == character_name:
+                if artifact.location == character_name:
                     team_vector[i * character_length + j + 1] = k
                     break
 
@@ -230,7 +211,7 @@ def get_equipment_vector_weighted_options(data, actions, team_gradient):
         equipments_score.append([1 for _ in weapons_data[weapon_type]])
 
         for artifacts in artifacts_data.values():
-            scores = [artifact.artifact_score(artifact_piece, normalized_weights) for artifact_piece in artifacts]
+            scores = [artifact.calculate_score(normalized_weights) for artifact in artifacts]
             equipments_score.append(scores)
 
     return equipments_score

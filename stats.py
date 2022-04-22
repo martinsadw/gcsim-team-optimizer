@@ -27,11 +27,11 @@ def artifacts_set_count(artifacts_data, weight_function=None):
 def artifacts_set_count_threshold(artifacts_data, thresholds, weight_function):
     set_count = defaultdict(lambda: [0] * len(thresholds))
     for artifacts_piece in artifacts_data.values():
-        for artifact_piece in artifacts_piece:
-            if artifact_piece['level'] >= 0 and artifact_piece['rarity'] >= 5:
-                key = artifact_set_readable_short[artifact_piece['set_key']]
+        for artifact in artifacts_piece:
+            if artifact.level >= 0 and artifact.rarity >= 5:
+                key = artifact_set_readable_short[artifact.set_key]
                 for bin_number, threshold in enumerate(thresholds):
-                    if weight_function(artifact_piece) > threshold:
+                    if weight_function(artifact) > threshold:
                         set_count[key][bin_number] += 1
 
     return set_count

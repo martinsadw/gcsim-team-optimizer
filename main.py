@@ -7,7 +7,7 @@ from gcsim_utils import gcsim_fitness
 from genetic_algorithm import GeneticAlgorithm
 from gcsim_utils import create_gcsim_file, run_team
 
-import artifact
+from artifact import Artifact
 import character
 import reader
 import stats
@@ -46,7 +46,7 @@ def main():
     # Upgrade Characters and Equipments
     character.upgrade_characters(characters_data)
     weapon.upgrade_weapons(weapons_data)
-    artifact.upgrade_artifacts(artifacts_data)
+    Artifact.upgrade_artifacts(artifacts_data)
 
     character.add_character(characters_data, 'KamisatoAyato')
 

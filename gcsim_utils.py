@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 
-from artifact import calculate_artifact_stats
+from artifact import Artifact
 from gcsim_names import good_to_gcsim_stats
 
 import reader
@@ -25,7 +25,7 @@ def character_to_gcsim(character_info):
         name=character_name, weapon=weapon_name, level=weapon['level'], max_level=weapon['max_level'],
         refine=weapon['refinement'])
 
-    artifact_stats = calculate_artifact_stats(character_info['artifacts'])
+    artifact_stats = Artifact.calculate_artifact_stats(character_info['artifacts'])
 
     # Character artifact set
     for set_key, set_count in artifact_stats['artifact_set'].items():
