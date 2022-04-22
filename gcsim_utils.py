@@ -13,7 +13,7 @@ def character_to_gcsim(character_info):
     character_name = character['key'].lower()
 
     weapon = character_info['weapon']
-    weapon_name = weapon['key'].lower()
+    weapon_name = weapon.key.lower()
 
     # Character base stats
     result = '{name} char lvl={level}/{max_level} cons={cons} talent={t1},{t2},{t3};\n'.format(
@@ -22,8 +22,8 @@ def character_to_gcsim(character_info):
 
     # Character Weapon
     result += '{name} add weapon="{weapon}" refine={refine} lvl={level}/{max_level};\n'.format(
-        name=character_name, weapon=weapon_name, level=weapon['level'], max_level=weapon['max_level'],
-        refine=weapon['refinement'])
+        name=character_name, weapon=weapon_name, level=weapon.level, max_level=weapon.max_level,
+        refine=weapon.refinement)
 
     artifact_stats = Artifact.calculate_artifact_stats(character_info['artifacts'])
 

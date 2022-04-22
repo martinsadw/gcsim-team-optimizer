@@ -2,6 +2,7 @@ import math
 from collections import defaultdict
 
 from artifact import Artifact
+from weapon import Weapon
 
 from character_data import character_weapon_type_map
 from weapon_data import weapon_type_map
@@ -33,20 +34,8 @@ def read_weapons(good_data):
     }
 
     for weapon_id, weapon in enumerate(good_data['weapons']):
-        ascension = weapon['ascension']
-        max_level = (20 + ascension * 20) if ascension <= 1 else (40 + (ascension - 1) * 10)
-        new_weapon = {
-            'id': weapon_id,
-            'level': weapon['level'],
-            'max_level': max_level,
-            'ascension': ascension,
-            'refinement': weapon['refinement'],
-            'key': weapon['key'],
-            'type': weapon_type_map[weapon['key']],
-            'location': weapon['location']
-        }
-
-        weapon_data[new_weapon['type']].append(new_weapon)
+        weapon_type = weapon_type_map[weapon['key']]
+        weapon_data[weapon_type].append(Weapon(weapon, weapon_id))
 
     return weapon_data
 
@@ -99,7 +88,7 @@ def get_weapons_by_name(weapons_data, weapon_name):
         return []
 
     weapon_type = weapon_type_map[weapon_name]
-    weapons = list((x for x in weapons_data[weapon_type] if x['key'] == weapon_name))
+    weapons = list((x for x in weapons_data[weapon_type] if x.key == weapon_name))
 
     return weapons
 
@@ -108,7 +97,7 @@ def get_weapon_by_character(weapons_data, character_name):
     weapon_type = character_weapon_type_map[character_name]
 
     for weapon in weapons_data[weapon_type]:
-        if weapon['location'] == character_name:
+        if weapon.location == character_name:
             return weapon
 
     return None
@@ -145,7 +134,7 @@ def get_team_vector(characters_data, weapons_data, artifacts_data, team_list):
     for i, character_name in enumerate(team_list):
         weapon_type = character_weapon_type_map[character_name]
         for j, weapon in enumerate(weapons_data[weapon_type]):
-            if weapon['location'] == character_name:
+            if weapon.location == character_name:
                 team_vector[i * character_length] = j
                 break
 

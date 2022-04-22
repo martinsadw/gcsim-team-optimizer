@@ -7,11 +7,11 @@ from gcsim_utils import gcsim_fitness
 from genetic_algorithm import GeneticAlgorithm
 from gcsim_utils import create_gcsim_file, run_team
 
-from artifact import Artifact
+from artifact import Artifact, artifact_quality
 import character
 import reader
 import stats
-import weapon
+from weapon import Weapon
 
 from actions import actions_dict
 
@@ -45,7 +45,7 @@ def main():
 
     # Upgrade Characters and Equipments
     character.upgrade_characters(characters_data)
-    weapon.upgrade_weapons(weapons_data)
+    Weapon.upgrade_weapons(weapons_data)
     Artifact.upgrade_artifacts(artifacts_data)
 
     character.add_character(characters_data, 'KamisatoAyato')
@@ -65,7 +65,7 @@ def main():
     # with open(good_filename_2) as good_file_2:
     #     good_data_2 = json.load(good_file_2)
     # stats.plot_set_count([good_data, good_data_2], ['Data 1', 'Data 2'],
-    #                      artifact.artifact_quality, thresholds=[0.9, 0.8, 0.7, 0.6, 0.5])
+    #                      artifact_quality, thresholds=[0.9, 0.8, 0.7, 0.6, 0.5])
 
     ##########################
 
