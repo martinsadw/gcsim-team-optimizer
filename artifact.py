@@ -106,6 +106,16 @@ class Artifact:
 
         return stats
 
+    def __repr__(self):
+        sub_stat_str = 'sub_stats=('
+        sub_stat_str += ', '.join([f'{key}={value:.2f}' for key, value in self.sub_stats.items()])
+        sub_stat_str += ')'
+
+        return f'Artifact(id={self.id}, slot={self.slot}, level={self.level}, rarity={self.rarity},' \
+               f'set_key={self.set_key}, main_stat_key={self.main_stat_key},' \
+               f'missing_sub_stats={self.missing_sub_stats}, empty_sub_stats={self.empty_sub_stats},' \
+               f'location={self.location}, {sub_stat_str})'
+
 
 def artifact_quality(artifact):
     return artifact.calculate_quality()

@@ -1,7 +1,7 @@
+import datetime
 import json
 import os
 import time
-from pprint import pprint
 
 from gcsim_utils import gcsim_fitness
 from genetic_algorithm import GeneticAlgorithm
@@ -26,6 +26,13 @@ def main():
     team_name = 'ayato_electrocharge'
     gcsim_filename = os.path.join('actions', team_name + '.txt')
 
+    team_slug = '-'.join(actions_dict[team_name]['team'])
+    output_dir = os.path.join('output', '{}_{}'.format(
+        datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+        team_slug
+    ))
+    os.makedirs(output_dir)
+
     # TODO(andre): Allow to pass special parameters to the final gcsim file
     #  Examples:
     #  Hu Tao stating HP: 'start_hp=3000'
@@ -46,7 +53,8 @@ def main():
     # # Substat gradient
     # team_vector = data.get_team_vector(actions_dict[team_name]['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
-    # team_gradient = stats.sub_stats_gradient(data, actions_dict[team_name], team_vector, iterations=1000)
+    # team_gradient = stats.sub_stats_gradient(data, actions_dict[team_name], team_vector, iterations=1000,
+    #                                          output_dir=output_dir)
 
     ##########################
 
@@ -59,13 +67,19 @@ def main():
     ##########################
 
     # # Genetic Algorithm Class
-    # ga = GeneticAlgorithm(data, gcsim_fitness)
+    # ga = GeneticAlgorithm(data, gcsim_fitness, output_dir=output_dir)
     # build_vector, fitness = ga.run(actions_dict[team_name])
     # team_info = data.get_team_build_by_vector(actions_dict[team_name]['team'], build_vector)
-    # pprint(team_info)
     #
-    # print('Best DPS:', fitness)
-    # print('Build:', build_vector)
+    # with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
+    #     json_object = json.dumps(team_info, indent=4, default=lambda x: x.__dict__)
+    #     build_file.write(json_object)
+    #
+    # with open(os.path.join(output_dir, 'metadata.txt'), 'w') as metadata_file:
+    #     metadata_file.writelines([
+    #         'Best DPS: {}\n'.format(fitness),
+    #         'Build: {}\n'.format(build_vector)
+    #     ])
 
     ##########################
 

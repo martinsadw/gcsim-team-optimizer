@@ -1,3 +1,4 @@
+import json
 import multiprocessing
 import os
 import random
@@ -35,7 +36,7 @@ def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_ac
 
 
 class GeneticAlgorithm:
-    def __init__(self, data, fitness_function, num_workers=2):
+    def __init__(self, data, fitness_function, num_workers=2, output_dir='output'):
         self.data = data
         self.fitness_function = fitness_function
         self.num_workers = num_workers
@@ -67,7 +68,8 @@ class GeneticAlgorithm:
         self.team_gradient = None
         self.equipments_score = None
 
-        self.temp_actions_path = os.path.join('actions', 'temp_gcsim')
+        self.output_dir = output_dir
+        self.temp_actions_path = os.path.join(self.output_dir, 'temp_gcsim')
 
     @staticmethod
     def generate_individual(weights):
@@ -167,6 +169,7 @@ class GeneticAlgorithm:
 
     def run(self, actions):
         os.makedirs(self.temp_actions_path, exist_ok=True)
+
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
                                                                   num_workers=self.num_workers,
                                                                   temp_actions_path=self.temp_actions_path)
@@ -175,8 +178,14 @@ class GeneticAlgorithm:
         self.current_team = self.data.get_team_vector(actions['team'])
         print('Calculating team gradient...')
         self.team_gradient = stats.sub_stats_gradient(self.data, actions, self.current_team,
-                                                      iterations=self.gradient_iterations)
-        pprint(self.team_gradient)
+                                                      iterations=self.gradient_iterations,
+                                                      output_dir=self.output_dir)
+
+        with open(os.path.join(self.output_dir, 'gradient.json'), 'w') as gradient_file:
+            gradient_data = dict(zip(actions['team'], self.team_gradient))
+            json_object = json.dumps(gradient_data, indent=4)
+            gradient_file.write(json_object)
+
         self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
 
         population = self.generate_population()
@@ -195,7 +204,8 @@ class GeneticAlgorithm:
             if (i + 1) % self.gradient_update_frequency == 0:
                 print('Recalculating team gradient...')
                 self.team_gradient = stats.sub_stats_gradient(self.data, actions, population[0],
-                                                              iterations=self.gradient_iterations)
+                                                              iterations=self.gradient_iterations,
+                                                              output_dir=self.output_dir)
                 pprint(self.team_gradient)
                 self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
 

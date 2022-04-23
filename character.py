@@ -17,3 +17,8 @@ class Character:
         self.talent_1 = 9
         self.talent_2 = 9
         self.talent_3 = 9
+
+    def __repr__(self):
+        return f'Character(id={self.id}, level={self.level}, ascension={self.ascension},' \
+               f'constellation={self.constellation}, talent_1={self.talent_1}, talent_2={self.talent_2},' \
+               f'talent_3={self.talent_3}, key={self.key})'
