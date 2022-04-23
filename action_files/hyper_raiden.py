@@ -10,6 +10,7 @@ restart;
 '''
 
 action = {
+  'name': 'hyper_raiden',
   'team': ['RaidenShogun', 'YaeMiko', 'KaedeharaKazuha', 'Bennett'],
   'simulation_length': 115,
   'mode': 'sl',

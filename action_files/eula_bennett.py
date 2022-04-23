@@ -12,6 +12,7 @@ restart;
 '''
 
 action = {
+  'name': 'eula_bennett',
   'team': ['Eula', 'RaidenShogun', 'Bennett', 'Rosaria'],
   'simulation_length': 110,
   'mode': 'sl',

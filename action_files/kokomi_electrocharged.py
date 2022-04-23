@@ -19,6 +19,7 @@ restart;
 '''
 
 action = {
+  'name': 'kokomi_electrocharged',
   'team': ['YaeMiko', 'KaedeharaKazuha', 'Fischl', 'SangonomiyaKokomi'],
   'simulation_length': 100,
   'mode': 'sl',

@@ -26,6 +26,7 @@ restart;
 '''
 
 action = {
+  'name': 'ayato_overvape',
   'team': ['Fischl', 'Bennett', 'Xiangling', 'KamisatoAyato'],
   'simulation_length': 100,
   'mode': 'sl',

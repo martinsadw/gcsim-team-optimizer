@@ -14,6 +14,7 @@ restart;
 '''
 
 action = {
+  'name': 'eula_shield',
   'team': ['Eula', 'RaidenShogun', 'Rosaria', 'Zhongli'],
   'simulation_length': 102,
   'mode': 'sl',

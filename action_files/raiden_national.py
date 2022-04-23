@@ -81,6 +81,7 @@ xiangling attack:3;
 '''
 
 action = {
+  'name': 'raiden_national',
   'team': ['RaidenShogun', 'Bennett', 'Xiangling', 'Xingqiu'],
   'simulation_length': 105,
   'mode': 'sl',
