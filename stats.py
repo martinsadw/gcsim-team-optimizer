@@ -5,6 +5,10 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
 
+from rich.live import Live
+from rich.table import Table
+from rich.color import Color, blend_rgb
+
 from artifact_data import artifact_set_readable_short,  artifact_set_readable, artifact_max_sub_stat
 from gcsim_utils import create_gcsim_file, run_team
 
@@ -86,6 +90,15 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
 
 
 def sub_stats_gradient(data, actions, vector, iterations=1000, output_dir='output'):
+    table = Table(title='Team Gradient')
+    table.add_column('Stat', justify='right')
+    for character in actions['team']:
+        table.add_column(character)
+    for sub_stat, sub_stat_values in artifact_max_sub_stat.items():
+        table.add_row(sub_stat)
+    color_green = (0, 255, 0)
+    color_white = (255, 255, 255)
+
     team_gradient = []
 
     temp_actions_path = os.path.join(output_dir, 'temp_sub_stats')
@@ -98,43 +111,49 @@ def sub_stats_gradient(data, actions, vector, iterations=1000, output_dir='outpu
     # print('Base dps:', base_dps['mean'])
     # print('Std. dev.:', base_dps['std'])
     # print('Error:', float(base_dps['std']) / math.sqrt(iterations))
+    table.title += f' (DPS: {base_dps["mean"]}; error: {float(base_dps["std"]) / math.sqrt(iterations):.2f})'
 
     sub_stat_rarity = 5
     sub_stat_multiplier = 2
 
-    # Finite Difference Coefficients Calculator
-    # https://web.media.mit.edu/~crtaylor/calculator.html
-    calculation_points = [0, 1]
-    points_coefficients = [-1, 1]
-    # calculation_points = [-1, 1]
-    # points_coefficients = [-1/2, 1/2]
-    for i, character in enumerate(actions['team']):
-        character_gradient = dict()
-        for sub_stat, sub_stat_values in artifact_max_sub_stat.items():
-            deviation = 0
-            for point, coefficient in zip(calculation_points, points_coefficients):
-                # The point 0 don't need to be recalculated every time for each substat
-                if point == 0:
-                    deviation += float(base_dps['mean']) * coefficient
-                    continue
+    with Live(table, auto_refresh=False, transient=True) as live:
+        # Finite Difference Coefficients Calculator
+        # https://web.media.mit.edu/~crtaylor/calculator.html
+        calculation_points = [0, 1]
+        points_coefficients = [-1, 1]
+        # calculation_points = [-1, 1]
+        # points_coefficients = [-1/2, 1/2]
+        for i, character in enumerate(actions['team']):
+            character_gradient = dict()
+            for j, (sub_stat, sub_stat_values) in enumerate(artifact_max_sub_stat.items()):
+                deviation = 0
+                for point, coefficient in zip(calculation_points, points_coefficients):
+                    # The point 0 don't need to be recalculated every time for each substat
+                    if point == 0:
+                        deviation += float(base_dps['mean']) * coefficient
+                        continue
 
-                point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
-                filename = character + '_' + point_str + '_' + sub_stat + '.txt'
-                temp_actions_filename = os.path.join(temp_actions_path, filename)
-                team_info = data.get_team_build_by_vector(actions['team'], vector)
+                    point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
+                    filename = character + '_' + point_str + '_' + sub_stat + '.txt'
+                    temp_actions_filename = os.path.join(temp_actions_path, filename)
+                    team_info = data.get_team_build_by_vector(actions['team'], vector)
 
-                team_info[i]['extra_stats'] = {
-                    sub_stat: sub_stat_values[str(sub_stat_rarity)] * sub_stat_multiplier * point
-                }
+                    team_info[i]['extra_stats'] = {
+                        sub_stat: sub_stat_values[str(sub_stat_rarity)] * sub_stat_multiplier * point
+                    }
 
-                create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
-                dps = float(run_team(temp_actions_filename)['mean'])
-                deviation += dps * coefficient
+                    create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
+                    dps = float(run_team(temp_actions_filename)['mean'])
+                    deviation += dps * coefficient
 
-            deviation /= sub_stat_multiplier
-            # print(f'{character:18} {sub_stat:10} {deviation:8.2f}')
-            character_gradient[sub_stat] = deviation
+                deviation /= sub_stat_multiplier
+                character_gradient[sub_stat] = deviation
 
-        team_gradient.append(character_gradient)
+                color_blend = max(-math.exp(-0.01 * deviation) + 1, 0)
+                cell_color = blend_rgb(color_white, color_green, color_blend)
+                table.columns[i+1]._cells[j] = f'[{Color.from_triplet(cell_color).name}]' + str(deviation)
+                live.refresh()
+
+            team_gradient.append(character_gradient)
 
     return team_gradient

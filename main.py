@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import random
 import time
 
 from gcsim_utils import gcsim_fitness
@@ -49,6 +50,11 @@ def main():
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
     # team_gradient = stats.sub_stats_gradient(data, gcsim_actions, team_vector, iterations=1000,
     #                                          output_dir=output_dir)
+    #
+    # with open(os.path.join(output_dir, 'gradient.json'), 'w') as gradient_file:
+    #     gradient_data = dict(zip(gcsim_actions['team'], team_gradient))
+    #     json_object = json.dumps(gradient_data, indent=4)
+    #     gradient_file.write(json_object)
 
     ##########################
 
