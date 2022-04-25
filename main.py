@@ -26,6 +26,27 @@ def default_json(x):
 
 
 def main():
+    restrictions = {
+        'raw_sets': [
+            {'GladiatorsFinale': 2},
+            {'GladiatorsFinale': 2, 'ShimenawasReminiscence': 2},
+            {'WanderersTroupe': 4},
+        ],
+        'sets': {
+            '2sets': [
+                'GladiatorsFinale',
+                'ShimenawasReminiscence',
+                'CrimsonWitchOfFlames',
+            ],
+            '4set': [
+                'WanderersTroupe',
+            ],
+        },
+        'strict': {
+            'Bennett': ['flower', 'plume'],
+        },
+    }
+
     good_filename = 'data/data.json'
     gcsim_actions = action_files.ayato_electrocharge
 
@@ -70,7 +91,7 @@ def main():
 
     # # Genetic Algorithm Class
     # ga = GeneticAlgorithm(data, gcsim_fitness, output_dir=output_dir)
-    # build_vector, fitness = ga.run(gcsim_actions)
+    # build_vector, fitness = ga.run(gcsim_actions, restrictions)
     # team_info = data.get_team_build_by_vector(gcsim_actions['team'], build_vector)
     #
     # with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
