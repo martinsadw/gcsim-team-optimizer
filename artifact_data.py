@@ -1,4 +1,4 @@
-artifact_main_stat = {
+MAIN_STAT = {
     'hp': [717, 920, 1123, 1326, 1530, 1733, 1936, 2139, 2342, 2545, 2749, 2952, 3155, 3358, 3561, 3764, 3967, 4171, 4374, 4577, 4780],
     'hp_': [0.07, 0.09, 0.110, 0.129, 0.149, 0.169, 0.189, 0.209, 0.228, 0.248, 0.268, 0.288, 0.308, 0.328, 0.347, 0.367, 0.387, 0.407, 0.427, 0.446, 0.466],
     'atk': [47, 60, 73, 86, 100, 113, 126, 139, 152, 166, 179, 192, 205, 219, 232, 245, 258, 272, 285, 298, 311],
@@ -18,136 +18,139 @@ artifact_main_stat = {
     'cryo_dmg_': [0.07, 0.09, 0.110, 0.129, 0.149, 0.169, 0.189, 0.209, 0.228, 0.248, 0.268, 0.288, 0.308, 0.328, 0.347, 0.367, 0.387, 0.407, 0.427, 0.446, 0.466]
 }
 
-artifact_max_sub_stat = {
-    "hp": {
-        "1": 29.88,
-        "2": 71.70,
-        "3": 143.40,
-        "4": 239.00,
-        "5": 298.75
+MAX_SUB_STAT = {
+    'hp': {
+        1: 29.88,
+        2: 71.70,
+        3: 143.40,
+        4: 239.00,
+        5: 298.75
     },
-    "hp_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'hp_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "atk": {
-        "1": 1.95,
-        "2": 4.67,
-        "3": 9.34,
-        "4": 15.56,
-        "5": 19.45
+    'atk': {
+        1: 1.95,
+        2: 4.67,
+        3: 9.34,
+        4: 15.56,
+        5: 19.45
     },
-    "atk_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'atk_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "def": {
-        "1": 2.31,
-        "2": 5.56,
-        "3": 11.11,
-        "4": 18.52,
-        "5": 23.15
+    'def': {
+        1: 2.31,
+        2: 5.56,
+        3: 11.11,
+        4: 18.52,
+        5: 23.15
     },
-    "def_": {
-        "1": 0.0182,
-        "2": 0.0291,
-        "3": 0.0437,
-        "4": 0.0583,
-        "5": 0.0729
+    'def_': {
+        1: 0.0182,
+        2: 0.0291,
+        3: 0.0437,
+        4: 0.0583,
+        5: 0.0729
     },
-    "eleMas": {
-        "1": 5.83,
-        "2": 9.33,
-        "3": 13.99,
-        "4": 18.56,
-        "5": 23.31
+    'eleMas': {
+        1: 5.83,
+        2: 9.33,
+        3: 13.99,
+        4: 18.56,
+        5: 23.31
     },
-    "enerRech_": {
-        "1": 0.0162,
-        "2": 0.0259,
-        "3": 0.0389,
-        "4": 0.0518,
-        "5": 0.0648
+    'enerRech_': {
+        1: 0.0162,
+        2: 0.0259,
+        3: 0.0389,
+        4: 0.0518,
+        5: 0.0648
     },
-    "critRate_": {
-        "1": 0.0097,
-        "2": 0.0155,
-        "3": 0.0233,
-        "4": 0.0311,
-        "5": 0.0389
+    'critRate_': {
+        1: 0.0097,
+        2: 0.0155,
+        3: 0.0233,
+        4: 0.0311,
+        5: 0.0389
     },
-    "critDMG_": {
-        "1": 0.0194,
-        "2": 0.0311,
-        "3": 0.0466,
-        "4": 0.0622,
-        "5": 0.0777
+    'critDMG_': {
+        1: 0.0194,
+        2: 0.0311,
+        3: 0.0466,
+        4: 0.0622,
+        5: 0.0777
     },
     # Not actual substats. These values are based on the max value for the main stat.
-    "anemo_dmg_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'anemo_dmg_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "geo_dmg_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'geo_dmg_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "electro_dmg_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'electro_dmg_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "hydro_dmg_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'hydro_dmg_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "pyro_dmg_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'pyro_dmg_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "cryo_dmg_": {
-        "1": 0.0146,
-        "2": 0.0233,
-        "3": 0.035,
-        "4": 0.0466,
-        "5": 0.0583
+    'cryo_dmg_': {
+        1: 0.0146,
+        2: 0.0233,
+        3: 0.035,
+        4: 0.0466,
+        5: 0.0583
     },
-    "physical_dmg_": {
-        "1": 0.0182,
-        "2": 0.0291,
-        "3": 0.0437,
-        "4": 0.0583,
-        "5": 0.0729
+    'physical_dmg_': {
+        1: 0.0182,
+        2: 0.0291,
+        3: 0.0437,
+        4: 0.0583,
+        5: 0.0729
     },
-    "heal_": {
-        "5": 0.0449
+    'heal_': {
+        5: 0.0449
     },
 }
 
-percent_stats = {'hp_', 'atk_', 'def_', 'enerRech_', 'heal_', 'critRate_', 'critDMG_', 'physical_dmg_', 'anemo_dmg_',
+ATTRIBUTE_LIST = ('hp', 'hp_', 'atk', 'atk_', 'def', 'def_', 'eleMas', 'enerRech_', 'heal_', 'critRate_', 'critDMG_',
+                  'physical_dmg_', 'anemo_dmg_', 'geo_dmg_', 'electro_dmg_', 'hydro_dmg_', 'pyro_dmg_', 'cryo_dmg_')
+
+PERCENT_STATS = {'hp_', 'atk_', 'def_', 'enerRech_', 'heal_', 'critRate_', 'critDMG_', 'physical_dmg_', 'anemo_dmg_',
                  'geo_dmg_', 'electro_dmg_', 'hydro_dmg_', 'pyro_dmg_', 'cryo_dmg_'}
 
-artifact_set_readable = {
+SET_READABLE = {
   "Adventurer": "Adventurer",
   "ArchaicPetra": "Archaic Petra",
   "Berserker": "Berserker",
@@ -156,6 +159,7 @@ artifact_set_readable = {
   "BraveHeart": "Brave Heart",
   "CrimsonWitchOfFlames": "Crimson Witch of Flames",
   "DefendersWill": "Defender's Will",
+  "EchoesOfAnOffering": "Echoes of an Offering",
   "EmblemOfSeveredFate": "Emblem of Severed Fate",
   "Gambler": "Gambler",
   "GladiatorsFinale": "Gladiator's Finale",
@@ -183,11 +187,12 @@ artifact_set_readable = {
   "Thundersoother": "Thundersoother",
   "TinyMiracle": "Tiny Miracle",
   "TravelingDoctor": "Traveling Doctor",
+  "VermillionHereafter": "Vermillion Hereafter",
   "ViridescentVenerer": "Viridescent Venerer",
   "WanderersTroupe": "Wanderer's Troupe",
 }
 
-artifact_set_readable_short = {
+SET_READABLE_SHORT = {
   "Adventurer": "Adventurer",
   "ArchaicPetra": "Archaic Petra",
   "Berserker": "Berserker",
@@ -196,6 +201,7 @@ artifact_set_readable_short = {
   "BraveHeart": "Brave Heart",
   "CrimsonWitchOfFlames": "Crimson Witch",
   "DefendersWill": "Defender",
+  "EchoesOfAnOffering": "Echoes",
   "EmblemOfSeveredFate": "Severed Fate",
   "Gambler": "Gambler",
   "GladiatorsFinale": "Gladiator",
@@ -223,6 +229,7 @@ artifact_set_readable_short = {
   "Thundersoother": "Thundersoother",
   "TinyMiracle": "Tiny Miracle",
   "TravelingDoctor": "Traveling Doctor",
+  "VermillionHereafter": "Vermillion",
   "ViridescentVenerer": "Viridescent",
   "WanderersTroupe": "Wanderer",
 }

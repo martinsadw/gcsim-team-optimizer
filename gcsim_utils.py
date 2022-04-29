@@ -1,93 +1,163 @@
+from collections import defaultdict
 import os
 import re
 import subprocess
 
-from artifact import Artifact
-from gcsim_names import good_to_gcsim_stats
+import settings
+from stats import Stats
 
 
-def character_to_gcsim(character_info):
-    character = character_info['character']
-    character_name = character.key.lower()
-
-    weapon = character_info['weapon']
-    weapon_name = weapon.key.lower()
-
-    # Character base stats
-    result = '{name} char lvl={level}/{max_level} cons={cons} talent={t1},{t2},{t3};\n'.format(
-        name=character_name, level=character.level, max_level=character.max_level,
-        cons=character.constellation, t1=character.talent_1, t2=character.talent_2, t3=character.talent_3)
-
-    # Character Weapon
-    result += '{name} add weapon="{weapon}" refine={refine} lvl={level}/{max_level};\n'.format(
-        name=character_name, weapon=weapon_name, level=weapon.level, max_level=weapon.max_level,
-        refine=weapon.refinement)
-
-    artifact_stats = Artifact.calculate_artifact_stats(character_info['artifacts'])
-
-    # Character artifact set
-    for set_key, set_count in artifact_stats['artifact_set'].items():
-        result += '{name} add set="{set}" count={count};\n'.format(
-            name=character_name, set=set_key.lower(), count=set_count)
-
-    # Character main stats
-    main_stats = '{name} add stats'.format(name=character_name)
-    for stats_key, stats_value in artifact_stats['main_stats'].items():
-        if stats_value > 0:
-            main_stats += ' {key}={value:.2f}'.format(key=good_to_gcsim_stats[stats_key], value=stats_value)
-    main_stats += '; #main\n'
-    result += main_stats
-
-    # Character sub stats
-    sub_stats = '{name} add stats'.format(name=character_name)
-    for stats_key, stats_value in artifact_stats['sub_stats'].items():
-        if stats_value > 0:
-            sub_stats += ' {key}={value:.2f}'.format(key=good_to_gcsim_stats[stats_key], value=stats_value)
-    sub_stats += '; #subs\n'
-    result += sub_stats
-
-    # Additional stats
-    if 'extra_stats' in character_info:
-        extra_stats = '{name} add stats'.format(name=character_name)
-        for stats_key, stats_value in character_info['extra_stats'].items():
-            extra_stats += ' {key}={value:.2f}'.format(key=good_to_gcsim_stats[stats_key], value=stats_value)
-        extra_stats += '; #extra\n'
-        result += extra_stats
-
-    return result
+GCSIM_DPS_REGEX = r"resulting in (?P<mean>-?[\d\.]+) dps " \
+                  r"\(min: (?P<min_dps>-?[\d\.]+) max: (?P<max_dps>-?[\d\.]+) std: (?P<std>-?[\d\.]+)\)"
 
 
-def create_gcsim_file(team_info, actions, filename, iterations=1000):
-    with open(filename, 'w') as file:
-        file.write('# Character Info\n')
-        for character_info in team_info:
-            file.write(character_to_gcsim(character_info))
-            file.write('\n')
-        file.write('\n')
+class GcsimData:
+    def __init__(self, team_info, actions, iterations=1000):
+        self.characters = [GcsimCharacter(character) for character in team_info]
+        self.actions = actions['actions']
+        self.config = {
+            'swap_delay': 12,
+            'iterations': iterations,
+            'duration': actions['simulation_length'],
+            'workers': 30,
+            'mode': actions['mode'],
+            'targets': [
+                {'level': 100, 'resistance': 0.1}
+            ],
+            'energy': {
+                'min': 480,
+                'max': 720,
+                'amount': 1,
+            },
+        }
 
-        file.write('# Simulation Config\n')
-        file.write('options swap_delay=12 debug=true iteration={iterations} duration={duration} workers=30 mode={mode};\n'.format(
-            iterations=iterations, duration=actions['simulation_length'], mode=actions['mode']))
-        file.write('target lvl=100 resist=.1;\n')
-        file.write('energy every interval=480,720 amount=1;\n')
-        file.write('\n\n')
+    def __str__(self):
+        text = ''
+        text += '# Character Info\n'
+        for character_info in self.characters:
+            text += str(character_info)
+            text += '\n'
+        text += '\n'
 
-        file.write('# Actions\n')
-        file.write(actions['actions'])
+        text += '# Simulation Config\n'
+        text += 'options swap_delay={swap} debug=true iteration={iterations} duration={duration} workers={workers} mode={mode};\n'.format(
+                swap=self.config['swap_delay'], iterations=self.config['iterations'], duration=self.config['duration'],
+                workers=self.config['workers'], mode=self.config['mode'])
+        for target in self.config['targets']:
+            text += 'target lvl={lvl} resist={resist};\n'.format(
+                    lvl=target["level"], resist=target["resistance"])
+        energy = self.config["energy"]
+        text += 'energy every interval={min},{max} amount={amount};\n'.format(
+                min=energy["min"], max=energy["max"], amount=energy["amount"])
+        text += '\n\n'
+
+        text += '# Actions\n'
+        text += self.actions
+
+        return text
+
+    def write_file(self, filename):
+        with open(filename, 'w') as file:
+            file.write(str(self))
+
+    def run(self, temp_file=None, exec_path=None, keep_file=False):
+        if temp_file is None:
+            temp_file = os.path.join(settings.DEFAULT_OUTPUT_PATH, 'temp.txt')
+
+        self.write_file(temp_file)
+        dps = self.run_file(temp_file, exec_path=exec_path)
+        if not keep_file:
+            os.remove(temp_file)
+
+        return dps
+
+    @staticmethod
+    def run_file(filename, exec_path=None):
+        if exec_path is None:
+            exec_path = settings.DEFAULT_EXEC_PATH
+
+        gcsim_result = subprocess.run([exec_path, '-c', filename], capture_output=True)
+        dps = re.search(GCSIM_DPS_REGEX, gcsim_result.stdout.decode('utf-8'), re.MULTILINE)
+
+        # print('DPS:', dps['mean'])
+        # print('Min:', dps['min_dps'])
+        # print('Max:', dps['max_dps'])
+        # print('Std:', dps['std'])
+        return dps
 
 
-def run_team(gcsim_filename):
-    gcsim_exec_path = os.path.join('.', 'gcsim')
+class GcsimCharacter:
+    def __init__(self, character_data):
+        character = character_data['character']
+        self.key = character.key.lower()
+        self.level = character.level
+        self.max_level = character.max_level
+        self.cons = character.constellation
+        self.talent_1 = character.talent_1
+        self.talent_2 = character.talent_2
+        self.talent_3 = character.talent_3
 
-    dps_regex = r"resulting in (?P<mean>-?[\d\.]+) dps \(min: (?P<min_dps>-?[\d\.]+) max: (?P<max_dps>-?[\d\.]+) std: (?P<std>-?[\d\.]+)\)"
-    gcsim_result = subprocess.run([gcsim_exec_path, '-c', gcsim_filename], capture_output=True)
-    dps = re.search(dps_regex, gcsim_result.stdout.decode('utf-8'), re.MULTILINE)
+        weapon = character_data['weapon']
+        self.weapon = {
+            'key': weapon.key.lower(),
+            'level': weapon.level,
+            'max_level': weapon.max_level,
+            'refine': weapon.refinement,
+        }
 
-    # print('DPS:', dps['mean'])
-    # print('Min:', dps['min_dps'])
-    # print('Max:', dps['max_dps'])
-    # print('Std:', dps['std'])
-    return dps
+        artifacts = character_data['artifacts']
+        self.sets = defaultdict(int)
+        self.main_stats = Stats()
+        self.sub_stats = Stats()
+        for artifact in artifacts.values():
+            if artifact is None:
+                continue
+
+            self.sets[artifact.set_key.lower()] += 1
+            self.main_stats += Stats.by_artifact_main_stat(artifact.main_stat_key, artifact.level)
+            self.sub_stats += artifact.sub_stats
+
+        if 'extra_stats' in character_data:
+            self.extra_stats = character_data['extra_stats']
+        else:
+            self.extra_stats = Stats()
+
+    def __str__(self):
+        # Character base stats
+        result = '{name} char lvl={level}/{max_level} cons={cons} talent={t1},{t2},{t3};\n'.format(
+            name=self.key, level=self.level, max_level=self.max_level,
+            cons=self.cons, t1=self.talent_1, t2=self.talent_2, t3=self.talent_3)
+
+        # Character Weapon
+        result += '{name} add weapon="{weapon}" refine={refine} lvl={level}/{max_level};\n'.format(
+            name=self.key, weapon=self.weapon['key'], level=self.weapon['level'], max_level=self.weapon['max_level'],
+            refine=self.weapon['refine'])
+
+        # Character artifact set
+        for set_key, set_count in self.sets.items():
+            result += '{name} add set="{set}" count={count};\n'.format(
+                name=self.key, set=set_key, count=set_count)
+
+        # Character main stats
+        main_stats = '{name} add stats '.format(name=self.key)
+        main_stats += self.main_stats.to_gcsim_text()
+        main_stats += '; #main\n'
+        result += main_stats
+
+        # Character sub stats
+        sub_stats = '{name} add stats '.format(name=self.key)
+        sub_stats += self.sub_stats.to_gcsim_text()
+        sub_stats += '; #subs\n'
+        result += sub_stats
+
+        # Additional stats
+        if self.extra_stats is not None:
+            extra_stats = '{name} add stats '.format(name=self.key)
+            extra_stats += self.extra_stats.to_gcsim_text()
+            extra_stats += '; #extra\n'
+            result += extra_stats
+
+        return result
 
 
 def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None,
@@ -114,9 +184,11 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, valid
         os.makedirs(temp_actions_path, exist_ok=True)
 
     gcsim_filename = os.path.join(temp_actions_path, '_'.join([str(x) for x in vector]) + '.txt')
-    if force_write or not os.path.exists(gcsim_filename):
-        create_gcsim_file(team_info, actions, gcsim_filename, iterations=iterations)
-    fitness = run_team(gcsim_filename)
+    if not force_write and os.path.exists(gcsim_filename):
+        fitness = GcsimData.run_file(gcsim_filename)
+    else:
+        gcsim_data = GcsimData(team_info, actions, iterations=iterations)
+        fitness = gcsim_data.run(gcsim_filename, keep_file=True)
 
     if stats is not None:
         if 'evaluation' not in stats:
