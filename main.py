@@ -5,13 +5,23 @@ import time
 
 from gcsim_utils import gcsim_fitness
 from genetic_algorithm import GeneticAlgorithm
-from gcsim_utils import create_gcsim_file, run_team
 
 from artifact import artifact_quality
+from gcsim_utils import GcsimData
 from good_utils import GoodData
-import stats
+import processing
+from stats import Stats
 
 import action_files
+
+
+def default_json(x):
+    if hasattr(x, 'to_json'):
+        return x.to_json()
+    elif hasattr(x, '__dict__'):
+        return x.__dict__
+    else:
+        return str(x)
 
 
 def main():
@@ -47,16 +57,16 @@ def main():
     # # Substat gradient
     # team_vector = data.get_team_vector(gcsim_actions['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
-    # team_gradient = stats.sub_stats_gradient(data, gcsim_actions, team_vector, iterations=1000,
-    #                                          output_dir=output_dir)
+    # team_gradient = processing.sub_stats_gradient(data, gcsim_actions, team_vector, iterations=1000,
+    #                                               output_dir=output_dir)
 
     ##########################
 
     # # Artifact set count
     # good_filename_2 = 'data/data_2.json'
     # data_2 = GoodData.from_filename(good_filename_2)
-    # stats.plot_set_count([data, data_2], ['Data 1', 'Data 2'],
-    #                      artifact_quality, thresholds=[0.9, 0.8, 0.7, 0.6, 0.5])
+    # processing.plot_set_count([data, data_2], ['Data 1', 'Data 2'],
+    #                           artifact_quality, thresholds=[0.9, 0.8, 0.7, 0.6, 0.5])
 
     ##########################
 
@@ -66,7 +76,7 @@ def main():
     # team_info = data.get_team_build_by_vector(gcsim_actions['team'], build_vector)
     #
     # with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
-    #     json_object = json.dumps(team_info, indent=4, default=lambda x: x.__dict__)
+    #     json_object = json.dumps(team_info, indent=4, default=default_json)
     #     build_file.write(json_object)
     #
     # with open(os.path.join(output_dir, 'metadata.txt'), 'w') as metadata_file:
@@ -94,8 +104,8 @@ def main():
 
     # # Team Reader
     # team_info = data.get_team_build(gcsim_actions['team'])
-    # create_gcsim_file(team_info, gcsim_actions, gcsim_filename, iterations=100)
-    # dps = run_team(gcsim_filename)
+    # gcsim_data = GcsimData(team_info, gcsim_actions, iterations=100)
+    # dps = gcsim_data.run(gcsim_filename, keep_file=True)
     # print(dps['mean'])
 
     ##########################
@@ -103,8 +113,8 @@ def main():
     # # Check Vector
     # team_vector = [0, 20, 7, 20, 0, 21, 5, 29, 25, 32, 11, 16, 5, 21, 32, 12, 18, 14, 1, 12, 26, 13, 32, 10]
     # team_info = data.get_team_build_by_vector(gcsim_actions['team'], team_vector)
-    # create_gcsim_file(team_info, gcsim_actions, gcsim_filename, iterations=100)
-    # dps = run_team(gcsim_filename)
+    # gcsim_data = GcsimData(team_info, gcsim_actions, iterations=100)
+    # dps = gcsim_data.run(gcsim_filename, keep_file=True)
     # print(dps['mean'])
 
 

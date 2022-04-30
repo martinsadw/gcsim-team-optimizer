@@ -1,140 +1,80 @@
-import math
-import os
-from collections import defaultdict
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-from artifact_data import artifact_set_readable_short,  artifact_set_readable, artifact_max_sub_stat
-from gcsim_utils import create_gcsim_file, run_team
+import artifact_data
+from gcsim_names import good_to_gcsim_stats
 
 
-def artifacts_set_count(artifacts_data, weight_function=None):
-    if weight_function is None:
-        def weight_function(artifact): return 1
+class Stats:
+    __slots__ = artifact_data.ATTRIBUTE_LIST
 
-    set_count = defaultdict(int)
-    for artifacts_piece in artifacts_data.values():
-        for artifact_piece in artifacts_piece:
-            if artifact_piece['level'] >= 20 and artifact_piece['rarity'] >= 5:
-                key = artifact_set_readable_short[artifact_piece['set_key']]
-                set_count[key] += weight_function(artifact_piece)
+    def __init__(self, **kwargs):
+        for attribute in artifact_data.ATTRIBUTE_LIST:
+            setattr(self, attribute, kwargs.get(attribute, 0))
 
-    return set_count
+    @classmethod
+    def by_stats_count(cls, quality=1, rarity_reference=5, **kwargs):
+        stats = {key: Stats.sub_stat(key, value, quality, rarity_reference) for key, value in kwargs.items()}
+        return cls(**stats)
 
+    @classmethod
+    def by_artifact_main_stat(cls, stat_key, level):
+        stats = cls()
+        stats[stat_key] += Stats.main_stat(stat_key, level)
+        return stats
 
-def artifacts_set_count_threshold(artifacts_data, thresholds, weight_function):
-    set_count = defaultdict(lambda: [0] * len(thresholds))
-    for artifacts_piece in artifacts_data.values():
-        for artifact in artifacts_piece:
-            if artifact.level >= 0 and artifact.rarity >= 5:
-                key = artifact_set_readable_short[artifact.set_key]
-                for bin_number, threshold in enumerate(thresholds):
-                    if weight_function(artifact) > threshold:
-                        set_count[key][bin_number] += 1
+    @classmethod
+    def by_artifact_sub_stat(cls, stat_key, quant=1, quality=1, rarity_reference=5):
+        stats = cls()
+        stats[stat_key] += Stats.sub_stat(stat_key, quant, quality, rarity_reference)
+        return stats
 
-    return set_count
+    @staticmethod
+    def main_stat(stat_key, level):
+        return artifact_data.MAIN_STAT[stat_key][level]
 
+    @staticmethod
+    def sub_stat(stat_key, quant=1, quality=1, rarity_reference=5):
+        return quant * quality * artifact_data.MAX_SUB_STAT[stat_key][rarity_reference]
 
-def plot_set_count(data, labels, weight_function, thresholds=None):
-    if thresholds is None:
-        thresholds = [0]
+    def to_gcsim_text(self):
+        text = ' '.join(['{key}={value:.2f}'.format(key=good_to_gcsim_stats[attribute], value=value)
+                         for attribute, value in self.items()])
 
-    fig, ax = plt.subplots()
+        return text
 
-    quant_data = len(data)
-    quant_bins = len(thresholds)
+    def calculate_power(self, rarity_reference=5):
+        power = 0
+        for key, sub_stat in self.items():
+            power += sub_stat / artifact_data.MAX_SUB_STAT[key][rarity_reference]
 
-    bar_spacing = 0.2
-    bar_size = (1 - bar_spacing) / quant_data
-    bar_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    thresholds_alphas = np.linspace(1, 0, quant_bins + 1)
+        return power
 
-    set_counts = []
-    names = set()
-    for good_data in data:
-        artifacts_set = artifacts_set_count_threshold(good_data.artifacts, thresholds, weight_function)
-        set_counts.append(artifacts_set)
-        names.update(artifacts_set.keys())
+    def to_json(self):
+        return {slot: self[slot] for slot in self.__slots__ if self[slot] > 0}
 
-    names = sorted(names, reverse=True)
-    yticks = np.arange(len(names))
+    def __str__(self):
+        return self.to_gcsim_text()
 
-    for i in range(quant_data):
-        set_count = set_counts[i]
-        label = labels[i]
+    def __getitem__(self, item):
+        return getattr(self, item)
 
-        for j in range(quant_bins):
-            values = [set_count[key][j] for key in names]
-            bin_label = (label if j == 0 else None)
-            # bin_size = bar_size * ((quant_bins - j + 1) / quant_bins)
-            bin_size = bar_size
-            ax.barh(yticks - bar_size * i + bar_spacing, values, alpha=thresholds_alphas[j],
-                    height=bin_size, label=bin_label, color=bar_colors[i])
+    def __setitem__(self, key, value):
+        return setattr(self, key, value)
 
-    ax.set_yticks(yticks, names)
+    def __add__(self, other):
+        new_stats = {attribute: self[attribute] + other[attribute] for attribute in artifact_data.ATTRIBUTE_LIST}
+        return Stats(**new_stats)
 
-    ax.legend()
-    if weight_function is None:
-        ax.set_title('Number of artifacts')
-    elif weight_function.__name__ == '<lambda>':
-        ax.set_title(f'Number of artifacts by custom function')
-    else:
-        ax.set_title(f'Number of artifacts by {weight_function.__name__}()')
-    fig.tight_layout()
-    plt.show()
+    def __sub__(self, other):
+        new_stats = {attribute: self[attribute] - other[attribute] for attribute in artifact_data.ATTRIBUTE_LIST}
+        return Stats(**new_stats)
 
+    def __iter__(self):
+        yield from self.keys()
 
-def sub_stats_gradient(data, actions, vector, iterations=1000, output_dir='output'):
-    team_gradient = []
+    def keys(self):
+        return iter([attribute for attribute in artifact_data.ATTRIBUTE_LIST if self[attribute] > 0])
 
-    temp_actions_path = os.path.join(output_dir, 'temp_sub_stats')
-    os.makedirs(temp_actions_path, exist_ok=True)
+    def values(self):
+        return iter([self[attribute] for attribute in artifact_data.ATTRIBUTE_LIST if self[attribute] > 0])
 
-    temp_actions_filename = os.path.join(temp_actions_path, 'base.txt')
-    team_info = data.get_team_build_by_vector(actions['team'], vector)
-    create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
-    base_dps = run_team(temp_actions_filename)
-    # print('Base dps:', base_dps['mean'])
-    # print('Std. dev.:', base_dps['std'])
-    # print('Error:', float(base_dps['std']) / math.sqrt(iterations))
-
-    sub_stat_rarity = 5
-    sub_stat_multiplier = 2
-
-    # Finite Difference Coefficients Calculator
-    # https://web.media.mit.edu/~crtaylor/calculator.html
-    calculation_points = [0, 1]
-    points_coefficients = [-1, 1]
-    # calculation_points = [-1, 1]
-    # points_coefficients = [-1/2, 1/2]
-    for i, character in enumerate(actions['team']):
-        character_gradient = dict()
-        for sub_stat, sub_stat_values in artifact_max_sub_stat.items():
-            deviation = 0
-            for point, coefficient in zip(calculation_points, points_coefficients):
-                # The point 0 don't need to be recalculated every time for each substat
-                if point == 0:
-                    deviation += float(base_dps['mean']) * coefficient
-                    continue
-
-                point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
-                filename = character + '_' + point_str + '_' + sub_stat + '.txt'
-                temp_actions_filename = os.path.join(temp_actions_path, filename)
-                team_info = data.get_team_build_by_vector(actions['team'], vector)
-
-                team_info[i]['extra_stats'] = {
-                    sub_stat: sub_stat_values[str(sub_stat_rarity)] * sub_stat_multiplier * point
-                }
-
-                create_gcsim_file(team_info, actions, temp_actions_filename, iterations=iterations)
-                dps = float(run_team(temp_actions_filename)['mean'])
-                deviation += dps * coefficient
-
-            deviation /= sub_stat_multiplier
-            # print(f'{character:18} {sub_stat:10} {deviation:8.2f}')
-            character_gradient[sub_stat] = deviation
-
-        team_gradient.append(character_gradient)
-
-    return team_gradient
+    def items(self):
+        return iter([(attribute, self[attribute]) for attribute in artifact_data.ATTRIBUTE_LIST if self[attribute] > 0])

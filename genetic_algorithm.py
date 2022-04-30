@@ -7,7 +7,7 @@ from pprint import pprint
 
 import numpy as np
 
-import stats
+import processing
 
 
 def fitness_worker(task_queue, result_queue, fitness_function, data, actions, temp_actions_path=None):
@@ -177,9 +177,9 @@ class GeneticAlgorithm:
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
         self.current_team = self.data.get_team_vector(actions['team'])
         print('Calculating team gradient...')
-        self.team_gradient = stats.sub_stats_gradient(self.data, actions, self.current_team,
-                                                      iterations=self.gradient_iterations,
-                                                      output_dir=self.output_dir)
+        self.team_gradient = processing.sub_stats_gradient(self.data, actions, self.current_team,
+                                                           iterations=self.gradient_iterations,
+                                                           output_dir=self.output_dir)
 
         with open(os.path.join(self.output_dir, 'gradient.json'), 'w') as gradient_file:
             gradient_data = dict(zip(actions['team'], self.team_gradient))
@@ -203,9 +203,9 @@ class GeneticAlgorithm:
 
             if (i + 1) % self.gradient_update_frequency == 0:
                 print('Recalculating team gradient...')
-                self.team_gradient = stats.sub_stats_gradient(self.data, actions, population[0],
-                                                              iterations=self.gradient_iterations,
-                                                              output_dir=self.output_dir)
+                self.team_gradient = processing.sub_stats_gradient(self.data, actions, population[0],
+                                                                   iterations=self.gradient_iterations,
+                                                                   output_dir=self.output_dir)
                 pprint(self.team_gradient)
                 self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
 
