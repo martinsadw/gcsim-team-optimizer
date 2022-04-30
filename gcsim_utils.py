@@ -160,13 +160,8 @@ class GcsimCharacter:
         return result
 
 
-def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None,
-                  stats=None, temp_actions_path=None):
-    cache_key = tuple(vector)
-    if fitness_cache is not None:
-        if cache_key in fitness_cache:
-            return fitness_cache[cache_key]
-
+def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, validation_penalty=1, stats=None,
+                  temp_actions_path=None):
     team_info = data.get_team_build_by_vector(actions['team'], vector)
 
     is_team_valid = data.validate_team(actions['team'], vector)
@@ -198,8 +193,5 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, valid
     dps = float(fitness['mean'])
     if not is_team_valid:
         dps *= (1 - validation_penalty)
-
-    if fitness_cache is not None:
-        fitness_cache[cache_key] = dps
 
     return dps
