@@ -71,6 +71,10 @@ class GeneticAlgorithm:
         self.best_fitness = 0
         self.best_dev = 0
 
+        self.best_individual_hist = []
+        self.best_fitness_hist = []
+        self.best_num_runs_hist = []
+
         self.quant_options = None
         self.current_team = None
         self.team_gradient = None
@@ -80,6 +84,17 @@ class GeneticAlgorithm:
         self.temp_actions_path = os.path.join(self.output_dir, 'temp_gcsim')
 
         self.summary_size = 10
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['task_queue']
+        del state['result_queue']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.task_queue = None
+        self.result_queue = None
 
     def get_deviation_cache(self, key):
         variance = (self.sum_sq_cache[key] / self.runs_cache[key]) - (self.sum_cache[key] / self.runs_cache[key]) ** 2
@@ -287,6 +302,10 @@ class GeneticAlgorithm:
             population_order = new_fitness.argsort()[::-1]
             new_population = new_population[population_order]
             new_fitness = new_fitness[population_order]
+
+            self.best_individual_hist.append(new_population[0].tolist())
+            self.best_fitness_hist.append(new_fitness[0])
+            self.best_num_runs_hist.append(tuple(new_population[0]))
 
             population = new_population
             fitness = new_fitness

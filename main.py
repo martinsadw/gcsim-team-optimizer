@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import pickle
 import time
 
 from gcsim_utils import gcsim_fitness
@@ -84,6 +85,9 @@ def main():
     #         'Best DPS: {}\n'.format(fitness),
     #         'Build: {}\n'.format(build_vector)
     #     ])
+    #
+    # with open(os.path.join(output_dir, 'ga_debug.pickle'), 'wb') as ga_debug_file:
+    #     pickle.dump(ga, ga_debug_file)
 
     ##########################
 
