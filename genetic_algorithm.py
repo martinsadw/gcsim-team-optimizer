@@ -1,4 +1,5 @@
 import json
+import math
 import multiprocessing
 import os
 import random
@@ -19,7 +20,7 @@ def fitness_worker(task_queue, result_queue, fitness_function, data, actions, te
         j, vector, iterations, validation_penalty, force_write = item
         result = fitness_function(vector, data, actions, iterations=iterations, validation_penalty=validation_penalty,
                                   force_write=force_write, temp_actions_path=temp_actions_path)
-        result_queue.put((j, result))
+        result_queue.put((j, result, iterations))
         task_queue.task_done()
 
 
@@ -47,8 +48,10 @@ class GeneticAlgorithm:
         self.population_size = 200
         self.selection_size = 40
         self.validation_penalty = 1
-        self.gradient_update_frequency = 50
-        self.evaluation_iterations = 10
+        self.gradient_update_frequency = 100
+        self.initial_iterations = 10
+        self.recurrent_iterations = 100
+        self.max_iterations = 10000
         self.gradient_iterations = 1000
         self.final_iterations = 1000
 
@@ -60,8 +63,11 @@ class GeneticAlgorithm:
         self.character_length = 6
 
         self.stats_dict = dict()
-        self.fitness_cache = defaultdict(int)
+        self.sum_cache = defaultdict(float)
+        self.sum_sq_cache = defaultdict(float)
         self.runs_cache = defaultdict(int)
+        self.fitness_cache = defaultdict(float)
+        self.best_fitness = 0
 
         self.quant_options = None
         self.current_team = None
@@ -70,6 +76,19 @@ class GeneticAlgorithm:
 
         self.output_dir = output_dir
         self.temp_actions_path = os.path.join(self.output_dir, 'temp_gcsim')
+
+    def get_deviation_cache(self, key):
+        variance = (self.sum_sq_cache[key] / self.runs_cache[key]) - (self.sum_cache[key] / self.runs_cache[key]) ** 2
+        return math.sqrt(variance)
+
+    def generate_deviation_cache(self):
+        return {key: self.get_deviation_cache(key) for key in self.runs_cache.keys()}
+
+    def get_error_cache(self, key):
+        return self.get_deviation_cache(key) / math.sqrt(self.runs_cache[key])
+
+    def generate_error_cache(self):
+        return {key: self.get_error_cache(key) for key in self.runs_cache.keys()}
 
     @staticmethod
     def generate_individual(weights):
@@ -92,18 +111,40 @@ class GeneticAlgorithm:
         return population
 
     def calculate_population_fitness(self, population):
+        cache_lock = set()
+
         fitness = np.empty((population.shape[0],))
         for i, individual in enumerate(population):
-            self.task_queue.put((i, individual, self.evaluation_iterations, self.validation_penalty, False))
+            # self.task_queue.put((i, individual, self.evaluation_iterations, self.validation_penalty, False))
+            cache_key = tuple(population[i])
+            if cache_key in cache_lock or self.runs_cache[cache_key] > self.max_iterations:
+                continue
+
+            if self.runs_cache[cache_key] < self.initial_iterations:
+                self.task_queue.put((i, individual, self.initial_iterations, self.validation_penalty, False))
+                cache_lock.add(cache_key)
+                continue
+
+            mean = self.fitness_cache[cache_key]
+            dev = self.get_deviation_cache(cache_key)
+            if mean + dev > self.best_fitness - dev:
+                self.task_queue.put((i, individual, self.recurrent_iterations, self.validation_penalty, False))
+                cache_lock.add(cache_key)
 
         self.task_queue.join()
         while not self.result_queue.empty():
-            i, result = self.result_queue.get()
+            i, result, iterations = self.result_queue.get()
+            mean = float(result['mean'])
+            dev = float(result['std'])
 
+            # Reference: https://math.stackexchange.com/a/1379804
             cache_key = tuple(population[i])
-            weight = self.runs_cache[cache_key] / (self.runs_cache[cache_key] + self.evaluation_iterations)
-            self.fitness_cache[cache_key] = self.fitness_cache[cache_key] * weight + result * (1 - weight)
-            self.runs_cache[cache_key] += self.evaluation_iterations
+            self.sum_cache[cache_key] += mean * iterations
+            self.sum_sq_cache[cache_key] += (dev ** 2 + mean ** 2) * iterations
+            self.runs_cache[cache_key] += iterations
+            self.fitness_cache[cache_key] = self.sum_cache[cache_key] / self.runs_cache[cache_key]
+
+        self.best_fitness = max(self.fitness_cache.values())
 
         for i, individual in enumerate(population):
             fitness[i] = int(self.fitness_cache[tuple(individual)])
@@ -229,7 +270,11 @@ class GeneticAlgorithm:
             # print('Quant invalid:', stats_dict.get('invalid', 0))
             print(f'Partial Fitness: {fitness[0]} (runs: {self.runs_cache[tuple(population[0])]})')
             print(f'Partial Build: {population[0]}')
-            print(fitness)
+            cache = zip(self.fitness_cache.values(), self.generate_error_cache().values(), self.runs_cache.values(), self.runs_cache.keys())
+            cache = sorted(cache, reverse=True)
+            print('Top 10:')
+            for dps, dev, runs, keys in cache[:10]:
+                print(f'- DPS[id={sum(keys):04d}]: {dps:.2f} +- {dev:.2f} (runs: {runs})')
 
         final_fitness = np.empty_like(fitness)
         for j in range(self.population_size):
@@ -237,15 +282,27 @@ class GeneticAlgorithm:
 
         self.task_queue.join()
         while not self.result_queue.empty():
-            j, result = self.result_queue.get()
-            final_fitness[j] = result
+            j, result, _ = self.result_queue.get()
+            final_fitness[j] = float(result['mean'])
 
         population_order = final_fitness.argsort()[::-1]
         population = population[population_order]
         final_fitness = final_fitness[population_order]
 
-        print('Final Fitness:', final_fitness)
+        print('Final Fitness:', final_fitness[0])
         print('Final Build:', population[0])
+
+        total_runs = 0
+        above_100_runs = 0
+        above_1000_runs = 0
+        for runs in self.runs_cache.values():
+            total_runs += runs
+            above_100_runs += max(runs - 100.0, 0)
+            above_1000_runs += max(runs - 1000.0, 0)
+
+        print('Total runs:', total_runs)
+        print('Runs above 100:', above_100_runs)
+        print('Runs above 1000:', above_1000_runs)
 
         # Kill all process
         # TODO(andre): Organize better when process are created and destroyed

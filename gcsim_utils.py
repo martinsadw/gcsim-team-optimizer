@@ -83,7 +83,7 @@ class GcsimData:
         # print('Min:', dps['min_dps'])
         # print('Max:', dps['max_dps'])
         # print('Std:', dps['std'])
-        return dps
+        return dps.groupdict()
 
 
 class GcsimCharacter:
@@ -172,7 +172,7 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, valid
             stats['invalid'] += 1
 
         if validation_penalty >= 1:
-            return 0
+            return {'mean': '0', 'min_dps': '0.00', 'max_dps': '0.00', 'std': '0.00'}
 
     if temp_actions_path is None:
         temp_actions_path = os.path.join('actions', 'temp_gcsim')
@@ -190,8 +190,10 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, valid
             stats['evaluation'] = 0
         stats['evaluation'] += iterations
 
-    dps = float(fitness['mean'])
-    if not is_team_valid:
-        dps *= (1 - validation_penalty)
+    # dps = float(fitness['mean'])
+    # if not is_team_valid:
+    #     dps *= (1 - validation_penalty)
+    #
+    # return dps
 
-    return dps
+    return fitness
