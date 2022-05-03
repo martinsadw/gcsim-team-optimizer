@@ -67,7 +67,9 @@ class GeneticAlgorithm:
         self.sum_sq_cache = defaultdict(float)
         self.runs_cache = defaultdict(int)
         self.fitness_cache = defaultdict(float)
+        self.best_key = ()
         self.best_fitness = 0
+        self.best_dev = 0
 
         self.quant_options = None
         self.current_team = None
@@ -127,7 +129,7 @@ class GeneticAlgorithm:
 
             mean = self.fitness_cache[cache_key]
             dev = self.get_deviation_cache(cache_key)
-            if mean + dev > self.best_fitness - dev:
+            if mean + dev > self.best_fitness - self.best_dev:
                 self.task_queue.put((i, individual, self.recurrent_iterations, self.validation_penalty, False))
                 cache_lock.add(cache_key)
 
@@ -144,7 +146,8 @@ class GeneticAlgorithm:
             self.runs_cache[cache_key] += iterations
             self.fitness_cache[cache_key] = self.sum_cache[cache_key] / self.runs_cache[cache_key]
 
-        self.best_fitness = max(self.fitness_cache.values())
+        self.best_key, self.best_fitness = max(self.fitness_cache.items(), key=lambda obj: obj[1])
+        self.best_dev = self.get_deviation_cache(self.best_key)
 
         for i, individual in enumerate(population):
             fitness[i] = int(self.fitness_cache[tuple(individual)])
@@ -297,8 +300,8 @@ class GeneticAlgorithm:
         above_1000_runs = 0
         for runs in self.runs_cache.values():
             total_runs += runs
-            above_100_runs += max(runs - 100.0, 0)
-            above_1000_runs += max(runs - 1000.0, 0)
+            above_100_runs += max(runs - 100, 0)
+            above_1000_runs += max(runs - 1000, 0)
 
         print('Total runs:', total_runs)
         print('Runs above 100:', above_100_runs)
