@@ -51,7 +51,7 @@ class GeneticAlgorithm:
         self.gradient_update_frequency = 100
         self.initial_iterations = 10
         self.recurrent_iterations = 100
-        self.max_iterations = 10000
+        self.max_iterations = 1000
         self.gradient_iterations = 1000
         self.final_iterations = 1000
 
@@ -79,6 +79,8 @@ class GeneticAlgorithm:
         self.output_dir = output_dir
         self.temp_actions_path = os.path.join(self.output_dir, 'temp_gcsim')
 
+        self.summary_size = 10
+
     def get_deviation_cache(self, key):
         variance = (self.sum_sq_cache[key] / self.runs_cache[key]) - (self.sum_cache[key] / self.runs_cache[key]) ** 2
         return math.sqrt(variance)
@@ -91,6 +93,23 @@ class GeneticAlgorithm:
 
     def generate_error_cache(self):
         return {key: self.get_error_cache(key) for key in self.runs_cache.keys()}
+
+    def get_stats(self, key):
+        return self.fitness_cache[key], self.get_error_cache(key), self.runs_cache[key]
+
+    def get_top_keys(self, quant, sort=False):
+        all_keys = list(self.fitness_cache.keys())
+        all_fitness = list(self.fitness_cache.values())
+
+        top_fitness_index = np.argpartition(all_fitness, -quant)[-quant:]
+        if sort:
+            top_fitness = np.array(all_fitness)[top_fitness_index]
+            top_fitness_order = np.argsort(top_fitness)[::-1]
+            top_fitness_index = top_fitness_index[top_fitness_order]
+
+        top_keys = np.array(all_keys)[top_fitness_index]
+
+        return top_keys
 
     @staticmethod
     def generate_individual(weights):
@@ -254,6 +273,8 @@ class GeneticAlgorithm:
                 self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
 
             new_population = population.copy()
+            new_population[:self.selection_size] = self.get_top_keys(self.selection_size)
+
             for j in range(self.selection_size, self.population_size):
                 parents = self.selection(population, fitness)
                 new_individual = self.crossover(parents)
@@ -273,11 +294,11 @@ class GeneticAlgorithm:
             # print('Quant invalid:', stats_dict.get('invalid', 0))
             print(f'Partial Fitness: {fitness[0]} (runs: {self.runs_cache[tuple(population[0])]})')
             print(f'Partial Build: {population[0]}')
-            cache = zip(self.fitness_cache.values(), self.generate_error_cache().values(), self.runs_cache.values(), self.runs_cache.keys())
-            cache = sorted(cache, reverse=True)
-            print('Top 10:')
-            for dps, dev, runs, keys in cache[:10]:
-                print(f'- DPS[id={sum(keys):04d}]: {dps:.2f} +- {dev:.2f} (runs: {runs})')
+            top_keys = self.get_top_keys(self.summary_size, sort=True)
+            print(f'Top {self.summary_size}:')
+            for key in top_keys:
+                dps, dev, runs = self.get_stats(tuple(key))
+                print(f'- DPS[id={sum(key):04d}]: {dps:.2f} +- {dev:.2f} (runs: {runs})')
 
         final_fitness = np.empty_like(fitness)
         for j in range(self.population_size):
