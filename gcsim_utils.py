@@ -160,7 +160,7 @@ class GcsimCharacter:
         return result
 
 
-def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, validation_penalty=1, stats=None,
+def gcsim_fitness(vector, data, actions, iterations=10, force_write=True, validation_penalty=1, stats=None,
                   temp_actions_path=None):
     team_info = data.get_team_build_by_vector(actions['team'], vector)
 

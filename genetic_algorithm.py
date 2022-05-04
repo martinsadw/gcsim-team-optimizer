@@ -123,14 +123,14 @@ class GeneticAlgorithm:
                 continue
 
             if self.runs_cache[cache_key] < self.initial_iterations:
-                self.task_queue.put((i, individual, self.initial_iterations, self.validation_penalty, False))
+                self.task_queue.put((i, individual, self.initial_iterations, self.validation_penalty, True))
                 cache_lock.add(cache_key)
                 continue
 
             mean = self.fitness_cache[cache_key]
             dev = self.get_deviation_cache(cache_key)
             if mean + dev > self.best_fitness - self.best_dev:
-                self.task_queue.put((i, individual, self.recurrent_iterations, self.validation_penalty, False))
+                self.task_queue.put((i, individual, self.recurrent_iterations, self.validation_penalty, True))
                 cache_lock.add(cache_key)
 
         self.task_queue.join()
