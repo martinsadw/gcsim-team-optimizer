@@ -71,9 +71,8 @@ class GeneticAlgorithm:
         self.best_fitness = 0
         self.best_dev = 0
 
-        self.best_individual_hist = []
-        self.best_fitness_hist = []
-        self.best_num_runs_hist = []
+        self.best_individuals_hist = []
+        self.best_stats_hist = []
 
         self.quant_options = None
         self.current_team = None
@@ -303,9 +302,9 @@ class GeneticAlgorithm:
             new_population = new_population[population_order]
             new_fitness = new_fitness[population_order]
 
-            self.best_individual_hist.append(new_population[0].tolist())
-            self.best_fitness_hist.append(new_fitness[0])
-            self.best_num_runs_hist.append(tuple(new_population[0]))
+            top_keys = self.get_top_keys(self.summary_size, sort=True)
+            self.best_individuals_hist.append(top_keys)
+            self.best_stats_hist.append([self.get_stats(tuple(key)) for key in top_keys])
 
             population = new_population
             fitness = new_fitness
@@ -313,7 +312,6 @@ class GeneticAlgorithm:
             # print('Quant invalid:', stats_dict.get('invalid', 0))
             print(f'Partial Fitness: {fitness[0]} (runs: {self.runs_cache[tuple(population[0])]})')
             print(f'Partial Build: {population[0]}')
-            top_keys = self.get_top_keys(self.summary_size, sort=True)
             print(f'Top {self.summary_size}:')
             for key in top_keys:
                 dps, dev, runs = self.get_stats(tuple(key))
