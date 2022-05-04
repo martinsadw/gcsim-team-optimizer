@@ -83,7 +83,7 @@ class GcsimData:
         # print('Min:', dps['min_dps'])
         # print('Max:', dps['max_dps'])
         # print('Std:', dps['std'])
-        return dps
+        return dps.groupdict()
 
 
 class GcsimCharacter:
@@ -160,13 +160,8 @@ class GcsimCharacter:
         return result
 
 
-def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, validation_penalty=1, fitness_cache=None,
-                  stats=None, temp_actions_path=None):
-    cache_key = tuple(vector)
-    if fitness_cache is not None:
-        if cache_key in fitness_cache:
-            return fitness_cache[cache_key]
-
+def gcsim_fitness(vector, data, actions, iterations=10, force_write=True, validation_penalty=1, stats=None,
+                  temp_actions_path=None):
     team_info = data.get_team_build_by_vector(actions['team'], vector)
 
     is_team_valid = data.validate_team(actions['team'], vector)
@@ -177,7 +172,7 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, valid
             stats['invalid'] += 1
 
         if validation_penalty >= 1:
-            return 0
+            return {'mean': '0', 'min_dps': '0.00', 'max_dps': '0.00', 'std': '0.00'}
 
     if temp_actions_path is None:
         temp_actions_path = os.path.join('actions', 'temp_gcsim')
@@ -195,11 +190,10 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=False, valid
             stats['evaluation'] = 0
         stats['evaluation'] += iterations
 
-    dps = float(fitness['mean'])
-    if not is_team_valid:
-        dps *= (1 - validation_penalty)
+    # dps = float(fitness['mean'])
+    # if not is_team_valid:
+    #     dps *= (1 - validation_penalty)
+    #
+    # return dps
 
-    if fitness_cache is not None:
-        fitness_cache[cache_key] = dps
-
-    return dps
+    return fitness
