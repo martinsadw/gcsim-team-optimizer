@@ -44,7 +44,7 @@ class GeneticAlgorithm:
         self.task_queue = None
         self.result_queue = None
 
-        self.num_iterations = 500
+        self.num_iterations = 300
         self.population_size = 200
         self.selection_size = 40
         self.validation_penalty = 1
@@ -71,8 +71,10 @@ class GeneticAlgorithm:
         self.best_fitness = 0
         self.best_dev = 0
 
-        self.best_individuals_hist = []
-        self.best_stats_hist = []
+        self.top_individuals_hist = []
+        self.top_fitness_hist = []
+        self.top_error_hist = []
+        self.top_runs_hist = []
 
         self.quant_options = None
         self.current_team = None
@@ -303,8 +305,10 @@ class GeneticAlgorithm:
             new_fitness = new_fitness[population_order]
 
             top_keys = self.get_top_keys(self.summary_size, sort=True)
-            self.best_individuals_hist.append(top_keys)
-            self.best_stats_hist.append([self.get_stats(tuple(key)) for key in top_keys])
+            self.top_individuals_hist.append(top_keys)
+            self.top_fitness_hist.append([self.fitness_cache[tuple(key)] for key in top_keys])
+            self.top_error_hist.append([self.get_error_cache(tuple(key)) for key in top_keys])
+            self.top_runs_hist.append([self.runs_cache[tuple(key)] for key in top_keys])
 
             population = new_population
             fitness = new_fitness
