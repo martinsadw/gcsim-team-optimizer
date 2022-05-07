@@ -44,13 +44,14 @@ class GeneticAlgorithm:
         self.task_queue = None
         self.result_queue = None
 
+        # Optimization Parameters
         self.num_iterations = 500
         self.population_size = 200
         self.selection_size = 40
         self.validation_penalty = 1
         self.gradient_update_frequency = 100
-        self.initial_iterations = 10
-        self.recurrent_iterations = 100
+        self.initial_iterations = 2
+        self.recurrent_iterations = 50
         self.max_iterations = 1000
         self.gradient_iterations = 1000
         self.final_iterations = 1000
@@ -62,24 +63,58 @@ class GeneticAlgorithm:
 
         self.character_length = 6
 
+        # Cache Data
         self.stats_dict = dict()
         self.sum_cache = defaultdict(float)
         self.sum_sq_cache = defaultdict(float)
         self.runs_cache = defaultdict(int)
         self.fitness_cache = defaultdict(float)
+
+        # Final results
         self.best_key = ()
         self.best_fitness = 0
         self.best_dev = 0
 
+        # Final Stats
+        self.overrun_count = 0
+        self.non_competitive_count = 0
+        self.repeated_count = 0
+        self.initial_fitness_count = 0
+        self.normal_fitness_count = 0
+
+        # Historical Data
+        self.top_individuals_hist = []
+        self.top_fitness_hist = []
+        self.top_error_hist = []
+        self.top_runs_hist = []
+        self.overrun_hist = []
+        self.non_competitive_hist = []
+        self.repeated_hist = []
+        self.initial_fitness_hist = []
+        self.normal_fitness_hist = []
+
+        # State Variables
         self.quant_options = None
         self.current_team = None
         self.team_gradient = None
         self.equipments_score = None
 
+        # Output Variables
         self.output_dir = output_dir
         self.temp_actions_path = os.path.join(self.output_dir, 'temp_gcsim')
 
         self.summary_size = 10
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['task_queue']
+        del state['result_queue']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.task_queue = None
+        self.result_queue = None
 
     def get_deviation_cache(self, key):
         variance = (self.sum_sq_cache[key] / self.runs_cache[key]) - (self.sum_cache[key] / self.runs_cache[key]) ** 2
@@ -136,21 +171,29 @@ class GeneticAlgorithm:
 
         fitness = np.empty((population.shape[0],))
         for i, individual in enumerate(population):
-            # self.task_queue.put((i, individual, self.evaluation_iterations, self.validation_penalty, False))
             cache_key = tuple(population[i])
-            if cache_key in cache_lock or self.runs_cache[cache_key] > self.max_iterations:
+            if cache_key in cache_lock:
+                self.repeated_count += 1
+                continue
+            cache_lock.add(cache_key)
+
+            if self.runs_cache[cache_key] > self.max_iterations:
+                self.overrun_count += 1
                 continue
 
             if self.runs_cache[cache_key] < self.initial_iterations:
                 self.task_queue.put((i, individual, self.initial_iterations, self.validation_penalty, True))
-                cache_lock.add(cache_key)
+                self.initial_fitness_count += 1
                 continue
 
             mean = self.fitness_cache[cache_key]
             dev = self.get_deviation_cache(cache_key)
-            if mean + dev > self.best_fitness - self.best_dev:
-                self.task_queue.put((i, individual, self.recurrent_iterations, self.validation_penalty, True))
-                cache_lock.add(cache_key)
+            if mean + dev < self.best_fitness - self.best_dev:
+                self.non_competitive_count += 1
+                continue
+
+            self.task_queue.put((i, individual, self.recurrent_iterations, self.validation_penalty, True))
+            self.normal_fitness_count += 1
 
         self.task_queue.join()
         while not self.result_queue.empty():
@@ -288,13 +331,24 @@ class GeneticAlgorithm:
             new_population = new_population[population_order]
             new_fitness = new_fitness[population_order]
 
+            top_keys = self.get_top_keys(self.summary_size, sort=True)
+            self.top_individuals_hist.append(top_keys)
+            self.top_fitness_hist.append([self.fitness_cache[tuple(key)] for key in top_keys])
+            self.top_error_hist.append([self.get_error_cache(tuple(key)) for key in top_keys])
+            self.top_runs_hist.append([self.runs_cache[tuple(key)] for key in top_keys])
+
+            self.overrun_hist.append(self.overrun_count)
+            self.non_competitive_hist.append(self.non_competitive_count)
+            self.repeated_hist.append(self.repeated_count)
+            self.initial_fitness_hist.append(self.initial_fitness_count)
+            self.normal_fitness_hist.append(self.normal_fitness_count)
+
             population = new_population
             fitness = new_fitness
             # print('Quant evaluations:', stats_dict.get('evaluation', 0))
             # print('Quant invalid:', stats_dict.get('invalid', 0))
             print(f'Partial Fitness: {fitness[0]} (runs: {self.runs_cache[tuple(population[0])]})')
             print(f'Partial Build: {population[0]}')
-            top_keys = self.get_top_keys(self.summary_size, sort=True)
             print(f'Top {self.summary_size}:')
             for key in top_keys:
                 dps, dev, runs = self.get_stats(tuple(key))
@@ -313,6 +367,9 @@ class GeneticAlgorithm:
         population = population[population_order]
         final_fitness = final_fitness[population_order]
 
+        self.best_key = tuple(population[0])
+        self.best_fitness = final_fitness[0]
+        self.best_dev = self.get_deviation_cache(self.best_key)
         print('Final Fitness:', final_fitness[0])
         print('Final Build:', population[0])
 

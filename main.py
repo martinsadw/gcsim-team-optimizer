@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import pickle
 import time
 
 from gcsim_utils import gcsim_fitness
@@ -42,9 +43,6 @@ def main():
     #  Hu Tao stating HP: 'start_hp=3000'
     #  Husk of Opulent Dreams initial stack: '+params=[stacks=4]'
 
-    # TODO(andre): Allow to change the default passive energy generation
-    #  i.e. 'energy every interval=240,360 amount=1;'
-
     data = GoodData.from_filename(good_filename)
     data.upgrade_artifacts()
     data.upgrade_characters()
@@ -84,6 +82,9 @@ def main():
     #         'Best DPS: {}\n'.format(fitness),
     #         'Build: {}\n'.format(build_vector)
     #     ])
+    #
+    # with open(os.path.join(output_dir, 'ga_debug.pickle'), 'wb') as ga_debug_file:
+    #     pickle.dump(ga, ga_debug_file)
 
     ##########################
 
