@@ -67,7 +67,10 @@ class GcsimData:
         self.write_file(temp_file)
         dps = self.run_file(temp_file, exec_path=exec_path)
         if not keep_file:
-            os.remove(temp_file)
+            try:
+                os.remove(temp_file)
+            except FileNotFoundError:
+                pass
 
         return dps
 

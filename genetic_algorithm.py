@@ -9,6 +9,7 @@ from pprint import pprint
 import numpy as np
 
 import processing
+import restriction
 
 
 def fitness_worker(task_queue, result_queue, fitness_function, data, actions, temp_actions_path=None):
@@ -61,7 +62,7 @@ class GeneticAlgorithm:
         self.crossover_method = 'character'
         self.mutation_method = 'character'
 
-        self.character_length = 6
+        self.character_length = 6  # weapon + 5 artifacts
 
         # Cache Data
         self.stats_dict = dict()
@@ -96,8 +97,7 @@ class GeneticAlgorithm:
         # State Variables
         self.quant_options = None
         self.base_team = None
-        self.fixed_equipments = None
-        self.equipment_restriction_mask = None
+        self.equipment_mask = None
         self.team_gradient = None
         self.equipments_score = None
 
@@ -166,7 +166,7 @@ class GeneticAlgorithm:
             population[1:] = [self.generate_individual(self.equipments_score)
                               for _ in range(1, self.population_size)]
 
-        population = np.choose(self.equipment_restriction_mask, [population, self.fixed_equipments])
+        population = np.where(self.equipment_mask, self.base_team, population)
         return population
 
     def calculate_population_fitness(self, population):
@@ -273,40 +273,22 @@ class GeneticAlgorithm:
             character_mask = np.logical_and((r >= c * self.character_length), (r < (c + 1) * self.character_length))
             mutation_chance = 0.1
             mutation_mask = np.logical_and(np.random.rand(vector_length) < mutation_chance, character_mask)
-            mutation_mask = np.logical_and(~self.equipment_restriction_mask, mutation_mask)
+            mutation_mask = np.logical_and(~self.equipment_mask, mutation_mask)
             new_individual = np.choose(mutation_mask, [individual, mutation])
 
         return new_individual
 
     def run(self, actions, restrictions=None):
         os.makedirs(self.temp_actions_path, exist_ok=True)
-        map_slots = {
-            'flower': 0,
-            'plume': 1,
-            'sands': 2,
-            'goblet': 3,
-            'circlet': 4,
-        }
-        current_team = self.data.get_team_vector(actions['team'])
-        self.fixed_equipments = np.full((24,), -1, dtype=int)
-        for character, slots in restrictions['strict'].items():
-            for slot in slots:
-                char_index = actions['team'].index(character)
-                slot_index = map_slots[slot] + 1  # weapon shift
-                equip_index = self.character_length * char_index + slot_index
-                self.fixed_equipments[equip_index] = current_team[equip_index]
 
-        self.equipment_restriction_mask = self.fixed_equipments >= 0
+        self.equipment_mask = restriction.get_equipments_mask(restrictions['equipment_lock'], actions['team'])
+        self.base_team = self.data.get_team_vector(actions['team'])
 
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
                                                                   num_workers=self.num_workers,
                                                                   temp_actions_path=self.temp_actions_path)
 
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
-        self.base_team = np.choose(
-            self.equipment_restriction_mask,
-            [current_team, self.fixed_equipments]
-        )
         print('Calculating team gradient...')
         self.team_gradient = processing.sub_stats_gradient(self.data, actions, self.base_team,
                                                            iterations=self.gradient_iterations,

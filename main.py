@@ -42,8 +42,9 @@ def main():
                 'WanderersTroupe',
             ],
         },
-        'strict': {
+        'equipment_lock': {
             'Bennett': ['flower', 'plume'],
+            'Noelle': ['goblet'],
         },
     }
 
@@ -69,7 +70,20 @@ def main():
     data.upgrade_characters()
     data.upgrade_weapons()
 
+    ##########################
+
+    # Add Ayato
     data.add_character('KamisatoAyato')
+
+    # Make Noelle C6
+    noelle = data.get_character_by_name('Noelle')
+    noelle.constellation = 6
+
+    # # Equip Deathmatch on Hu Tao
+    # deathmatch = data.get_weapons_by_name('Deathmatch')[0]
+    # hutao_weapon = data.get_weapon_by_character('HuTao')
+    # hutao_weapon.location = deathmatch.location
+    # deathmatch.location = 'HuTao'
 
     ##########################
 
@@ -103,6 +117,9 @@ def main():
     #         'Best DPS: {}\n'.format(fitness),
     #         'Build: {}\n'.format(build_vector)
     #     ])
+    #
+    # gcsim_data = GcsimData(team_info, gcsim_actions, iterations=1000)
+    # gcsim_data.write_file(os.path.join(output_dir, 'actions_file.txt'))
     #
     # with open(os.path.join(output_dir, 'ga_debug.pickle'), 'wb') as ga_debug_file:
     #     pickle.dump(ga, ga_debug_file)
