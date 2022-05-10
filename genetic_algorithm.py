@@ -98,6 +98,7 @@ class GeneticAlgorithm:
         self.quant_options = None
         self.base_team = None
         self.equipment_mask = None
+        self.character_mask = None
         self.team_gradient = None
         self.equipments_score = None
 
@@ -269,7 +270,7 @@ class GeneticAlgorithm:
             new_individual = np.choose(mutation_mask, [individual, mutation])
 
         else:  # self.mutation_method == 'character'
-            c = random.randrange(quant_characters)
+            c = random.choice(np.nonzero(~self.character_mask)[0])
             character_mask = np.logical_and((r >= c * self.character_length), (r < (c + 1) * self.character_length))
             mutation_chance = 0.1
             mutation_mask = np.logical_and(np.random.rand(vector_length) < mutation_chance, character_mask)
@@ -282,6 +283,11 @@ class GeneticAlgorithm:
         os.makedirs(self.temp_actions_path, exist_ok=True)
 
         self.equipment_mask = restriction.get_equipments_mask(restrictions['equipment_lock'], actions['team'])
+        self.character_mask = restriction.get_character_mask(restrictions['character_lock'], actions['team'])
+        self.equipment_mask = np.logical_or(
+            self.equipment_mask,
+            np.repeat(self.character_mask, self.character_length)
+        )
         self.base_team = self.data.get_team_vector(actions['team'])
 
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,

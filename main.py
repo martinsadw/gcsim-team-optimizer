@@ -42,9 +42,15 @@ def main():
                 'WanderersTroupe',
             ],
         },
+        'character_lock': [
+            'Zhongli',
+            'Albedo',
+            'Xingqiu',
+        ],
         'equipment_lock': {
             'Bennett': ['flower', 'plume'],
             'Noelle': ['goblet'],
+            'HuTao': ['weapon'],
         },
     }
 

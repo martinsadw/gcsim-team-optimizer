@@ -1,5 +1,6 @@
 import numpy as np
 
+
 EQUIPMENT_ID = {
     'weapon': 0,
     'flower': 1,
@@ -26,3 +27,17 @@ def get_equipments_mask(equipment_lock, team):
             equipments_mask[equip_index] = True
 
     return equipments_mask
+
+
+def get_character_mask(character_lock, team):
+    quant_characters = len(team)
+    character_mask = np.zeros((quant_characters,), dtype=bool)
+    for character in character_lock:
+        try:
+            char_index = team.index(character)
+        except ValueError:
+            continue
+
+        character_mask[char_index] = True
+
+    return character_mask
