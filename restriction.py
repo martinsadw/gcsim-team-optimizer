@@ -1,5 +1,6 @@
 import numpy as np
 
+import artifact_data
 
 EQUIPMENT_ID = {
     'weapon': 0,
@@ -11,7 +12,7 @@ EQUIPMENT_ID = {
 }
 
 
-def get_equipments_mask(equipment_lock, team):
+def get_equipments_mask(team, equipment_lock):
     quant_characters = len(team)
     character_length = len(EQUIPMENT_ID.keys())
     equipments_mask = np.zeros((quant_characters * character_length,), dtype=bool)
@@ -29,7 +30,7 @@ def get_equipments_mask(equipment_lock, team):
     return equipments_mask
 
 
-def get_character_mask(character_lock, team):
+def get_character_mask(team, character_lock):
     quant_characters = len(team)
     character_mask = np.zeros((quant_characters,), dtype=bool)
     for character in character_lock:
@@ -41,3 +42,21 @@ def get_character_mask(character_lock, team):
         character_mask[char_index] = True
 
     return character_mask
+
+
+def get_stat_subset(team, character_lock=None, equipment_lock=None):
+    stat_subset = []
+    goblet_stats = {'physical_dmg_', 'anemo_dmg_', 'geo_dmg_', 'electro_dmg_', 'hydro_dmg_', 'pyro_dmg_', 'cryo_dmg_'}
+    circlet_stats = {'heal_'}
+    for i, character in enumerate(team):
+        if character in character_lock:
+            continue
+
+        stats = set(artifact_data.ATTRIBUTE_LIST)
+        if 'goblet' in equipment_lock[character]:
+            stats -= goblet_stats
+        if 'circlet' in equipment_lock[character]:
+            stats -= circlet_stats
+        stat_subset.extend([(i, stat_key) for stat_key in stats])
+
+    return stat_subset

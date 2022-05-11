@@ -4,6 +4,7 @@ import os
 import pickle
 import time
 
+import restriction
 from gcsim_utils import gcsim_fitness
 from genetic_algorithm import GeneticAlgorithm
 
@@ -50,7 +51,8 @@ def main():
         'equipment_lock': {
             'Bennett': ['flower', 'plume'],
             'Noelle': ['goblet'],
-            'HuTao': ['weapon'],
+            'HuTao': ['weapon', 'circlet'],
+            'Xingqiu': ['goblet'],
         },
     }
 
@@ -96,8 +98,12 @@ def main():
     # # Substat gradient
     # team_vector = data.get_team_vector(gcsim_actions['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
-    # team_gradient = processing.sub_stats_gradient(data, gcsim_actions, team_vector, iterations=1000,
-    #                                               output_dir=output_dir)
+    # team_info = data.get_team_build_by_vector(gcsim_actions['team'], team_vector)
+    # gcsim_data = GcsimData(team_info, gcsim_actions, iterations=1000)
+    # stat_subset = restriction.get_stat_subset(gcsim_actions['team'],
+    #                                           character_lock=restrictions['character_lock'],
+    #                                           equipment_lock=restrictions['equipment_lock'])
+    # team_gradient = processing.sub_stats_gradient(gcsim_data, stat_subset=stat_subset, output_dir=output_dir)
 
     ##########################
 

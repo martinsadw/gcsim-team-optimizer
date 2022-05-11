@@ -8,6 +8,7 @@ from pprint import pprint
 
 import numpy as np
 
+from gcsim_utils import GcsimData
 import processing
 import restriction
 
@@ -282,13 +283,16 @@ class GeneticAlgorithm:
     def run(self, actions, restrictions=None):
         os.makedirs(self.temp_actions_path, exist_ok=True)
 
-        self.equipment_mask = restriction.get_equipments_mask(restrictions['equipment_lock'], actions['team'])
-        self.character_mask = restriction.get_character_mask(restrictions['character_lock'], actions['team'])
+        self.equipment_mask = restriction.get_equipments_mask(actions['team'], restrictions['equipment_lock'])
+        self.character_mask = restriction.get_character_mask(actions['team'], restrictions['character_lock'])
         self.equipment_mask = np.logical_or(
             self.equipment_mask,
             np.repeat(self.character_mask, self.character_length)
         )
         self.base_team = self.data.get_team_vector(actions['team'])
+        stat_subset = restriction.get_stat_subset(actions['team'],
+                                                  character_lock=restrictions['character_lock'],
+                                                  equipment_lock=restrictions['equipment_lock'])
 
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
                                                                   num_workers=self.num_workers,
@@ -296,8 +300,9 @@ class GeneticAlgorithm:
 
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
         print('Calculating team gradient...')
-        self.team_gradient = processing.sub_stats_gradient(self.data, actions, self.base_team,
-                                                           iterations=self.gradient_iterations,
+        base_team_info = self.data.get_team_build_by_vector(actions['team'], self.base_team)
+        gcsim_data = GcsimData(base_team_info, actions, iterations=self.gradient_iterations)
+        self.team_gradient = processing.sub_stats_gradient(gcsim_data, stat_subset=stat_subset,
                                                            output_dir=self.output_dir)
 
         # TODO(rodrigo): Save last gradient instead of first
@@ -306,7 +311,7 @@ class GeneticAlgorithm:
             json_object = json.dumps(gradient_data, indent=4)
             gradient_file.write(json_object)
 
-        self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
+        self.equipments_score = self.data.get_equipment_vector_weighted_options(actions['team'], self.team_gradient)
 
         population = self.generate_population()
         fitness = self.calculate_population_fitness(population)
@@ -323,11 +328,12 @@ class GeneticAlgorithm:
 
             if (i + 1) % self.gradient_update_frequency == 0:
                 print('Recalculating team gradient...')
-                self.team_gradient = processing.sub_stats_gradient(self.data, actions, population[0],
-                                                                   iterations=self.gradient_iterations,
+                base_team_info = self.data.get_team_build_by_vector(actions['team'], population[0])
+                gcsim_data = GcsimData(base_team_info, actions, iterations=self.gradient_iterations)
+                self.team_gradient = processing.sub_stats_gradient(gcsim_data, stat_subset=stat_subset,
                                                                    output_dir=self.output_dir)
                 pprint(self.team_gradient)
-                self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
+                self.equipments_score = self.data.get_equipment_vector_weighted_options(actions['team'], self.team_gradient)
 
             new_population = population.copy()
             new_population[:self.selection_size] = self.get_top_keys(self.selection_size)
