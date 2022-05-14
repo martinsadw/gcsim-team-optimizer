@@ -28,25 +28,29 @@ def default_json(x):
 
 def main():
     restrictions = {
-        'raw_sets': [
-            {'GladiatorsFinale': 2},
-            {'GladiatorsFinale': 2, 'ShimenawasReminiscence': 2},
-            {'WanderersTroupe': 4},
-        ],
+        'raw_sets': {
+            'hutao': {
+                'penalty': 0.0,
+                'sets': [
+                    {'gladiatorsfinale': 4},
+                    {'gladiatorsfinale': 2, 'shimenawasreminiscence': 2},
+                    {'wandererstroupe': 4},
+                ]
+            }
+        },
         'sets': {
             '2sets': [
-                'GladiatorsFinale',
-                'ShimenawasReminiscence',
-                'CrimsonWitchOfFlames',
+                'gladiatorsfinale',
+                'shimenawasreminiscence',
+                'crimsonwitchofflames',
             ],
             '4set': [
-                'WanderersTroupe',
+                'wandererstroupe',
             ],
         },
         'character_lock': [
             'Zhongli',
             'Albedo',
-            'Xingqiu',
         ],
         'equipment_lock': {
             'Bennett': ['flower', 'plume'],

@@ -13,25 +13,43 @@ import processing
 import restriction
 
 
-def fitness_worker(task_queue, result_queue, fitness_function, data, actions, temp_actions_path=None):
+def fitness_worker(task_queue, result_queue, fitness_function, data, actions, restriction_rules, temp_actions_path=None):
     while True:
         item = task_queue.get()
         if item is None:
             break
 
         j, vector, iterations, validation_penalty, force_write = item
-        result = fitness_function(vector, data, actions, iterations=iterations, validation_penalty=validation_penalty,
-                                  force_write=force_write, temp_actions_path=temp_actions_path)
-        result_queue.put((j, result, iterations))
+
+        team_info = data.get_team_build_by_vector(actions['team'], vector)
+        gcsim_data = GcsimData(team_info, actions, iterations=iterations)
+        penalty = 1
+        penalty *= restriction.validate_equipments(vector, actions['team'])
+        penalty *= restriction.validate_team(gcsim_data, restriction_rules['raw_sets'])
+
+        result = fitness_function(vector, data, actions, iterations=iterations,
+                                  validation_penalty=validation_penalty, force_write=force_write,
+                                  temp_actions_path=temp_actions_path)
+        print({key: value for key, value in gcsim_data.characters[0].sets.items() if value > 0})
+        print(result['mean'], penalty, float(result['mean']) * penalty)
+        final_result = {
+            'mean': float(result['mean']) * penalty,
+            # Not sure if that's the correct way of considering penalty on the deviation
+            'std': float(result['std']) * penalty,
+            'min_dps': float(result['min_dps']) * penalty,
+            'max_dps': float(result['max_dps']) * penalty,
+        }
+
+        result_queue.put((j, final_result, iterations))
         task_queue.task_done()
 
 
-def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_actions_path=None):
+def create_fitness_queue(fitness_function, data, actions, restriction_rules, num_workers=1, temp_actions_path=None):
     task_queue = multiprocessing.JoinableQueue()
     result_queue = multiprocessing.Queue()
 
     for i in range(num_workers):
-        process_args = (task_queue, result_queue, fitness_function, data, actions, temp_actions_path)
+        process_args = (task_queue, result_queue, fitness_function, data, actions, restriction_rules, temp_actions_path)
         process = multiprocessing.Process(target=fitness_worker, args=process_args)
         process.start()
 
@@ -227,6 +245,8 @@ class GeneticAlgorithm:
             parent_2 = population[random.randrange(self.population_size)]
 
         else:  # self.selection_method == 'roulette'
+            if sum(fitness) <= 0:
+                fitness = np.ones_like(fitness)
             parents = random.choices(range(len(fitness)), fitness, k=2)
             parent_1 = population[parents[0]]
             parent_2 = population[parents[1]]
@@ -280,22 +300,22 @@ class GeneticAlgorithm:
 
         return new_individual
 
-    def run(self, actions, restrictions=None):
+    def run(self, actions, restriction_rules=None):
         os.makedirs(self.temp_actions_path, exist_ok=True)
 
-        self.equipment_mask = restriction.get_equipments_mask(actions['team'], restrictions['equipment_lock'])
-        self.character_mask = restriction.get_character_mask(actions['team'], restrictions['character_lock'])
+        self.equipment_mask = restriction.get_equipments_mask(actions['team'], restriction_rules['equipment_lock'])
+        self.character_mask = restriction.get_character_mask(actions['team'], restriction_rules['character_lock'])
         self.equipment_mask = np.logical_or(
             self.equipment_mask,
             np.repeat(self.character_mask, self.character_length)
         )
         self.base_team = self.data.get_team_vector(actions['team'])
         stat_subset = restriction.get_stat_subset(actions['team'],
-                                                  character_lock=restrictions['character_lock'],
-                                                  equipment_lock=restrictions['equipment_lock'])
+                                                  character_lock=restriction_rules['character_lock'],
+                                                  equipment_lock=restriction_rules['equipment_lock'])
 
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
-                                                                  num_workers=self.num_workers,
+                                                                  restriction_rules, num_workers=self.num_workers,
                                                                   temp_actions_path=self.temp_actions_path)
 
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
@@ -312,6 +332,18 @@ class GeneticAlgorithm:
             gradient_file.write(json_object)
 
         self.equipments_score = self.data.get_equipment_vector_weighted_options(actions['team'], self.team_gradient)
+        for i, character in enumerate(actions['team']):
+            char_key = character.lower()
+            if char_key in restriction_rules['raw_sets']:
+                required_sets = set()
+                for artifact_sets in restriction_rules['raw_sets'][char_key]['sets']:
+                    required_sets |= set(artifact_sets.keys())
+
+                for j, slot in enumerate(('flower', 'plume', 'sands', 'goblet', 'circlet')):
+                    equipments_score = self.equipments_score[i * self.character_length + j + 1]
+                    for k in range(len(equipments_score)):
+                        if self.data.artifacts[slot][k].set_key.lower() in required_sets:
+                            equipments_score[k] *= 4
 
         population = self.generate_population()
         fitness = self.calculate_population_fitness(population)

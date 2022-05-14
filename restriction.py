@@ -1,6 +1,8 @@
 import numpy as np
 
 import artifact_data
+from character_data import character_weapon_type_map
+from gcsim_utils import GcsimData
 
 EQUIPMENT_ID = {
     'weapon': 0,
@@ -60,3 +62,61 @@ def get_stat_subset(team, character_lock=None, equipment_lock=None):
         stat_subset.extend([(i, stat_key) for stat_key in stats])
 
     return stat_subset
+
+
+def validate_equipments(equipment_vector, team):
+    penalty = 1
+    penalty *= check_repeated_equipment(equipment_vector, team)
+
+    return penalty
+
+
+def check_repeated_equipment(equipment_vector, team):
+    character_length = len(EQUIPMENT_ID.keys())
+    used_equipments = set()
+    for i, character_name in enumerate(team):
+        weapon_type = character_weapon_type_map[character_name]
+
+        weapon_key = (weapon_type, equipment_vector[i * character_length])
+        if weapon_key in used_equipments:
+            return 0
+        used_equipments.add(weapon_key)
+
+        for j in range(1, character_length):
+            artifact_key = (j, equipment_vector[i * character_length + j])
+            if artifact_key in used_equipments:
+                return 0
+            used_equipments.add(artifact_key)
+
+    return 1
+
+
+def validate_team(gcsim_data, set_restriction):
+    penalty = 1
+    penalty *= check_artifact_set(gcsim_data, set_restriction)
+
+    return penalty
+
+
+def check_artifact_set(gcsim_data, set_restrictions):
+    penalty = 1
+    for character in gcsim_data.characters:
+        if character.key not in set_restrictions:
+            continue
+
+        found_set = False
+        for artifact_set in set_restrictions[character.key]['sets']:
+            is_valid = True
+            for set_key, set_amount in artifact_set.items():
+                if character.sets[set_key] < set_amount:
+                    is_valid = False
+                    break
+
+            if is_valid:
+                found_set = True
+                break
+
+        if not found_set:
+            penalty *= set_restrictions[character.key]['penalty']
+
+    return penalty
