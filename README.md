@@ -8,7 +8,8 @@ Prepare environment
 Run project
 
 - Copy GOOD file to `.\data\data.json`
-- Change `team_name` variable in `main` function in `main.py` file
+- Change `gcsim_actions` variable in `main` function in `main.py` file
+- Uncomment wich part of the code should be executed (e.g. genetic algorithm)
 - Execute project, i.e. `python main.py`
 
 ## Code improvements

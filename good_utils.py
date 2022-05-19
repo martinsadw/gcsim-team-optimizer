@@ -203,16 +203,18 @@ class GoodData:
 
         return quant_options
 
-    def get_equipment_vector_weighted_options(self, actions, team_gradient):
+    def get_equipment_vector_weighted_options(self, team_list, team_gradient):
         equipments_score = []
 
         for i, weights in enumerate(team_gradient):
             normalized_weights = defaultdict(int)
-            weights_max = max(weights.values())
-            for key, value in weights.items():
-                normalized_weights[key] = value / weights_max
+            if len(weights.values()) > 0:
+                weights_max = max(weights.values())
+                if weights_max > 0:
+                    for key, value in weights.items():
+                        normalized_weights[key] = value / weights_max
 
-            weapon_type = character_weapon_type_map[actions['team'][i]]
+            weapon_type = character_weapon_type_map[team_list[i]]
             equipments_score.append([1 for _ in self.weapons[weapon_type]])
 
             for artifacts in self.artifacts.values():

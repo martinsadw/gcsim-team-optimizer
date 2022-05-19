@@ -1,3 +1,4 @@
+import copy
 import math
 import os
 from collections import defaultdict
@@ -86,53 +87,45 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
     plt.show()
 
 
-def sub_stats_gradient(data, actions, vector, iterations=1000, output_dir='output'):
-    team_gradient = []
+def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output'):
+    team_gradient = [dict() for _ in range(len(base_gcsim_data.characters))]
 
     temp_actions_path = os.path.join(output_dir, 'temp_sub_stats')
     os.makedirs(temp_actions_path, exist_ok=True)
 
     temp_actions_filename = os.path.join(temp_actions_path, 'base.txt')
-    team_info = data.get_team_build_by_vector(actions['team'], vector)
-    base_gcsim_data = GcsimData(team_info, actions, iterations=iterations)
     base_dps = base_gcsim_data.run(temp_actions_filename, keep_file=True)
-    # print('Base dps:', base_dps['mean'])
-    # print('Std. dev.:', base_dps['std'])
-    # print('Error:', float(base_dps['std']) / math.sqrt(iterations))
 
-    sub_stat_rarity = 5
     sub_stat_multiplier = 2
+    if stat_subset is None:
+        stat_subset = [(i, stat_key)
+                       for i in range(len(base_gcsim_data.characters))
+                       for stat_key in artifact_data.ATTRIBUTE_LIST]
 
     # Finite Difference Coefficients Calculator
     # https://web.media.mit.edu/~crtaylor/calculator.html
     calculation_points = [0, 1]
     points_coefficients = [-1, 1]
-    # calculation_points = [-1, 1]
-    # points_coefficients = [-1/2, 1/2]
-    for i, character in enumerate(actions['team']):
-        character_gradient = dict()
-        for stat_key in artifact_data.ATTRIBUTE_LIST:
-            deviation = 0
-            for point, coefficient in zip(calculation_points, points_coefficients):
-                # The point 0 don't need to be recalculated every time for each substat
-                if point == 0:
-                    deviation += float(base_dps['mean']) * coefficient
-                    continue
+    for i, stat_key in stat_subset:
+        character = base_gcsim_data.characters[i].key
+        deviation = 0
+        for point, coefficient in zip(calculation_points, points_coefficients):
+            # The point 0 don't need to be recalculated every time for each substat
+            if point == 0:
+                deviation += float(base_dps['mean']) * coefficient
+                continue
 
-                point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
-                filename = character + '_' + point_str + '_' + stat_key + '.txt'
-                temp_actions_filename = os.path.join(temp_actions_path, filename)
+            point_str = ('m' + str(-point) if point < 0 else 'p' + str(point))
+            filename = character + '_' + point_str + '_' + stat_key + '.txt'
+            temp_actions_filename = os.path.join(temp_actions_path, filename)
 
-                new_stat = Stats.by_artifact_sub_stat(stat_key, sub_stat_multiplier * point)
-                gcsim_data = GcsimData(team_info, actions, iterations=iterations)
-                gcsim_data.characters[i].extra_stats += new_stat
-                dps = float(gcsim_data.run(temp_actions_filename, keep_file=True)['mean'])
-                deviation += dps * coefficient
+            new_stat = Stats.by_artifact_sub_stat(stat_key, sub_stat_multiplier * point)
+            gcsim_data = copy.deepcopy(base_gcsim_data)
+            gcsim_data.characters[i].extra_stats += new_stat
+            dps = float(gcsim_data.run(temp_actions_filename, keep_file=True)['mean'])
+            deviation += dps * coefficient
 
-            deviation /= sub_stat_multiplier
-            # print(f'{character:18} {stat_key:10} {deviation:8.2f}')
-            character_gradient[stat_key] = deviation
-
-        team_gradient.append(character_gradient)
+        deviation /= sub_stat_multiplier
+        team_gradient[i][stat_key] = deviation
 
     return team_gradient

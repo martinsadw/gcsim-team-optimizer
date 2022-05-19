@@ -4,6 +4,7 @@ import os
 import pickle
 import time
 
+import restriction
 from gcsim_utils import gcsim_fitness
 from genetic_algorithm import GeneticAlgorithm
 
@@ -26,6 +27,39 @@ def default_json(x):
 
 
 def main():
+    restrictions = {
+        'raw_sets': {
+            'hutao': {
+                'penalty': 0.0,
+                'sets': [
+                    {'gladiatorsfinale': 4},
+                    {'gladiatorsfinale': 2, 'shimenawasreminiscence': 2},
+                    {'wandererstroupe': 4},
+                ]
+            }
+        },
+        'sets': {
+            '2sets': [
+                'gladiatorsfinale',
+                'shimenawasreminiscence',
+                'crimsonwitchofflames',
+            ],
+            '4set': [
+                'wandererstroupe',
+            ],
+        },
+        'character_lock': [
+            'Zhongli',
+            'Albedo',
+        ],
+        'equipment_lock': {
+            'Bennett': ['flower', 'plume'],
+            'Noelle': ['goblet'],
+            'HuTao': ['weapon', 'circlet'],
+            'Xingqiu': ['goblet'],
+        },
+    }
+
     good_filename = 'data/data.json'
     gcsim_actions = action_files.ayato_electrocharge
 
@@ -48,15 +82,32 @@ def main():
     data.upgrade_characters()
     data.upgrade_weapons()
 
+    ##########################
+
+    # Add Ayato
     data.add_character('KamisatoAyato')
+
+    # Make Noelle C6
+    noelle = data.get_character_by_name('Noelle')
+    noelle.constellation = 6
+
+    # # Equip Deathmatch on Hu Tao
+    # deathmatch = data.get_weapons_by_name('Deathmatch')[0]
+    # hutao_weapon = data.get_weapon_by_character('HuTao')
+    # hutao_weapon.location = deathmatch.location
+    # deathmatch.location = 'HuTao'
 
     ##########################
 
     # # Substat gradient
     # team_vector = data.get_team_vector(gcsim_actions['team'])
     # # team_vector = [0, 4, 6, 6, 0, 4, 3, 10, 8, 3, 20, 19, 4, 19, 31, 18, 16, 17, 5, 12, 13, 12, 37, 11]
-    # team_gradient = processing.sub_stats_gradient(data, gcsim_actions, team_vector, iterations=1000,
-    #                                               output_dir=output_dir)
+    # team_info = data.get_team_build_by_vector(gcsim_actions['team'], team_vector)
+    # gcsim_data = GcsimData(team_info, gcsim_actions, iterations=1000)
+    # stat_subset = restriction.get_stat_subset(gcsim_actions['team'],
+    #                                           character_lock=restrictions['character_lock'],
+    #                                           equipment_lock=restrictions['equipment_lock'])
+    # team_gradient = processing.sub_stats_gradient(gcsim_data, stat_subset=stat_subset, output_dir=output_dir)
 
     ##########################
 
@@ -70,7 +121,7 @@ def main():
 
     # # Genetic Algorithm Class
     # ga = GeneticAlgorithm(data, gcsim_fitness, output_dir=output_dir)
-    # build_vector, fitness = ga.run(gcsim_actions)
+    # build_vector, fitness = ga.run(gcsim_actions, restrictions)
     # team_info = data.get_team_build_by_vector(gcsim_actions['team'], build_vector)
     #
     # with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
@@ -82,6 +133,9 @@ def main():
     #         'Best DPS: {}\n'.format(fitness),
     #         'Build: {}\n'.format(build_vector)
     #     ])
+    #
+    # gcsim_data = GcsimData(team_info, gcsim_actions, iterations=1000)
+    # gcsim_data.write_file(os.path.join(output_dir, 'actions_file.txt'))
     #
     # with open(os.path.join(output_dir, 'ga_debug.pickle'), 'wb') as ga_debug_file:
     #     pickle.dump(ga, ga_debug_file)

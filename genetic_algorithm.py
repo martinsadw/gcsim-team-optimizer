@@ -8,28 +8,31 @@ from pprint import pprint
 
 import numpy as np
 
+from gcsim_utils import GcsimData
 import processing
+import restriction
 
 
-def fitness_worker(task_queue, result_queue, fitness_function, data, actions, temp_actions_path=None):
+def fitness_worker(task_queue, result_queue, fitness_function, data, actions, restriction_rules, temp_actions_path=None):
     while True:
         item = task_queue.get()
         if item is None:
             break
 
         j, vector, iterations, validation_penalty, force_write = item
-        result = fitness_function(vector, data, actions, iterations=iterations, validation_penalty=validation_penalty,
-                                  force_write=force_write, temp_actions_path=temp_actions_path)
+        result = fitness_function(vector, data, actions, iterations=iterations,
+                                  validation_penalty=validation_penalty, force_write=force_write,
+                                  temp_actions_path=temp_actions_path)
         result_queue.put((j, result, iterations))
         task_queue.task_done()
 
 
-def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_actions_path=None):
+def create_fitness_queue(fitness_function, data, actions, restriction_rules, num_workers=1, temp_actions_path=None):
     task_queue = multiprocessing.JoinableQueue()
     result_queue = multiprocessing.Queue()
 
     for i in range(num_workers):
-        process_args = (task_queue, result_queue, fitness_function, data, actions, temp_actions_path)
+        process_args = (task_queue, result_queue, fitness_function, data, actions, restriction_rules, temp_actions_path)
         process = multiprocessing.Process(target=fitness_worker, args=process_args)
         process.start()
 
@@ -39,6 +42,8 @@ def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_ac
 class GeneticAlgorithm:
     def __init__(self, data, fitness_function, num_workers=2, output_dir='output'):
         self.data = data
+        self.actions = None
+        self.restriction_rules = None
         self.fitness_function = fitness_function
         self.num_workers = num_workers
         self.task_queue = None
@@ -61,7 +66,7 @@ class GeneticAlgorithm:
         self.crossover_method = 'character'
         self.mutation_method = 'character'
 
-        self.character_length = 6
+        self.character_length = 6  # weapon + 5 artifacts
 
         # Cache Data
         self.stats_dict = dict()
@@ -69,6 +74,7 @@ class GeneticAlgorithm:
         self.sum_sq_cache = defaultdict(float)
         self.runs_cache = defaultdict(int)
         self.fitness_cache = defaultdict(float)
+        self.penalty_cache = defaultdict(lambda: 1)
 
         # Final results
         self.best_key = ()
@@ -95,7 +101,9 @@ class GeneticAlgorithm:
 
         # State Variables
         self.quant_options = None
-        self.current_team = None
+        self.base_team = None
+        self.equipment_mask = None
+        self.character_mask = None
         self.team_gradient = None
         self.equipments_score = None
 
@@ -118,7 +126,7 @@ class GeneticAlgorithm:
 
     def get_deviation_cache(self, key):
         variance = (self.sum_sq_cache[key] / self.runs_cache[key]) - (self.sum_cache[key] / self.runs_cache[key]) ** 2
-        return math.sqrt(variance)
+        return math.sqrt(variance) * self.penalty_cache[key]
 
     def generate_deviation_cache(self):
         return {key: self.get_deviation_cache(key) for key in self.runs_cache.keys()}
@@ -154,7 +162,7 @@ class GeneticAlgorithm:
     def generate_population(self):
         vector_length = len(self.quant_options)
         population = np.empty((self.population_size, vector_length), dtype=int)
-        population[0] = self.current_team
+        population[0] = self.base_team
 
         if self.selection_method == 'uniform':
             population[1:] = [[random.randrange(quant) for quant in self.quant_options]
@@ -164,14 +172,24 @@ class GeneticAlgorithm:
             population[1:] = [self.generate_individual(self.equipments_score)
                               for _ in range(1, self.population_size)]
 
+        population = np.where(self.equipment_mask, self.base_team, population)
         return population
+
+    def calculate_penalty(self, individual):
+        team_info = self.data.get_team_build_by_vector(self.actions['team'], individual)
+        gcsim_data = GcsimData(team_info, self.actions)
+        penalty = 1
+        penalty *= restriction.validate_equipments(individual, self.actions['team'])
+        penalty *= restriction.validate_team(gcsim_data, self.restriction_rules['raw_sets'])
+
+        return penalty
 
     def calculate_population_fitness(self, population):
         cache_lock = set()
 
         fitness = np.empty((population.shape[0],))
         for i, individual in enumerate(population):
-            cache_key = tuple(population[i])
+            cache_key = tuple(individual)
             if cache_key in cache_lock:
                 self.repeated_count += 1
                 continue
@@ -183,6 +201,7 @@ class GeneticAlgorithm:
 
             if self.runs_cache[cache_key] < self.initial_iterations:
                 self.task_queue.put((i, individual, self.initial_iterations, self.validation_penalty, True))
+                self.penalty_cache[cache_key] = self.calculate_penalty(individual)
                 self.initial_fitness_count += 1
                 continue
 
@@ -207,12 +226,14 @@ class GeneticAlgorithm:
             self.sum_sq_cache[cache_key] += (dev ** 2 + mean ** 2) * iterations
             self.runs_cache[cache_key] += iterations
             self.fitness_cache[cache_key] = self.sum_cache[cache_key] / self.runs_cache[cache_key]
+            self.fitness_cache[cache_key] *= self.penalty_cache[cache_key]
 
         self.best_key, self.best_fitness = max(self.fitness_cache.items(), key=lambda obj: obj[1])
         self.best_dev = self.get_deviation_cache(self.best_key)
 
         for i, individual in enumerate(population):
-            fitness[i] = int(self.fitness_cache[tuple(individual)])
+            cache_key = tuple(individual)
+            fitness[i] = int(self.fitness_cache[cache_key])
 
         return fitness
 
@@ -222,6 +243,8 @@ class GeneticAlgorithm:
             parent_2 = population[random.randrange(self.population_size)]
 
         else:  # self.selection_method == 'roulette'
+            if sum(fitness) <= 0:
+                fitness = np.ones_like(fitness)
             parents = random.choices(range(len(fitness)), fitness, k=2)
             parent_1 = population[parents[0]]
             parent_2 = population[parents[1]]
@@ -259,40 +282,69 @@ class GeneticAlgorithm:
         # mutation = np.array([random.randrange(quant) for quant in self.quant_options])
         mutation = self.generate_individual(self.equipments_score)
 
+        # TODO(rodrigo): Add mutation_chance as a parameter
         if self.mutation_method == 'random':
             mutation_chance = 0.025
             mutation_mask = (np.random.rand(vector_length) < mutation_chance)
             new_individual = np.choose(mutation_mask, [individual, mutation])
 
         else:  # self.mutation_method == 'character'
-            c = random.randrange(quant_characters)
-            character_mask = (r >= c * self.character_length) & (r < (c + 1) * self.character_length)
+            c = random.choice(np.nonzero(~self.character_mask)[0])
+            character_mask = np.logical_and((r >= c * self.character_length), (r < (c + 1) * self.character_length))
             mutation_chance = 0.1
-            mutation_mask = (np.random.rand(vector_length) < mutation_chance) & character_mask
+            mutation_mask = np.logical_and(np.random.rand(vector_length) < mutation_chance, character_mask)
+            mutation_mask = np.logical_and(~self.equipment_mask, mutation_mask)
             new_individual = np.choose(mutation_mask, [individual, mutation])
 
         return new_individual
 
-    def run(self, actions):
+    def run(self, actions, restriction_rules=None):
         os.makedirs(self.temp_actions_path, exist_ok=True)
 
+        self.actions = actions
+        self.restriction_rules = restriction_rules
+
+        self.equipment_mask = restriction.get_equipments_mask(actions['team'], restriction_rules['equipment_lock'])
+        self.character_mask = restriction.get_character_mask(actions['team'], restriction_rules['character_lock'])
+        self.equipment_mask = np.logical_or(
+            self.equipment_mask,
+            np.repeat(self.character_mask, self.character_length)
+        )
+        self.base_team = self.data.get_team_vector(actions['team'])
+        stat_subset = restriction.get_stat_subset(actions['team'],
+                                                  character_lock=restriction_rules['character_lock'],
+                                                  equipment_lock=restriction_rules['equipment_lock'])
+
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
-                                                                  num_workers=self.num_workers,
+                                                                  restriction_rules, num_workers=self.num_workers,
                                                                   temp_actions_path=self.temp_actions_path)
 
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
-        self.current_team = self.data.get_team_vector(actions['team'])
         print('Calculating team gradient...')
-        self.team_gradient = processing.sub_stats_gradient(self.data, actions, self.current_team,
-                                                           iterations=self.gradient_iterations,
+        base_team_info = self.data.get_team_build_by_vector(actions['team'], self.base_team)
+        gcsim_data = GcsimData(base_team_info, actions, iterations=self.gradient_iterations)
+        self.team_gradient = processing.sub_stats_gradient(gcsim_data, stat_subset=stat_subset,
                                                            output_dir=self.output_dir)
 
+        # TODO(rodrigo): Save last gradient instead of first
         with open(os.path.join(self.output_dir, 'gradient.json'), 'w') as gradient_file:
             gradient_data = dict(zip(actions['team'], self.team_gradient))
             json_object = json.dumps(gradient_data, indent=4)
             gradient_file.write(json_object)
 
-        self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
+        self.equipments_score = self.data.get_equipment_vector_weighted_options(actions['team'], self.team_gradient)
+        for i, character in enumerate(actions['team']):
+            char_key = character.lower()
+            if char_key in restriction_rules['raw_sets']:
+                required_sets = set()
+                for artifact_sets in restriction_rules['raw_sets'][char_key]['sets']:
+                    required_sets |= set(artifact_sets.keys())
+
+                for j, slot in enumerate(('flower', 'plume', 'sands', 'goblet', 'circlet')):
+                    equipments_score = self.equipments_score[i * self.character_length + j + 1]
+                    for k in range(len(equipments_score)):
+                        if self.data.artifacts[slot][k].set_key.lower() in required_sets:
+                            equipments_score[k] *= 4
 
         population = self.generate_population()
         fitness = self.calculate_population_fitness(population)
@@ -309,11 +361,12 @@ class GeneticAlgorithm:
 
             if (i + 1) % self.gradient_update_frequency == 0:
                 print('Recalculating team gradient...')
-                self.team_gradient = processing.sub_stats_gradient(self.data, actions, population[0],
-                                                                   iterations=self.gradient_iterations,
+                base_team_info = self.data.get_team_build_by_vector(actions['team'], population[0])
+                gcsim_data = GcsimData(base_team_info, actions, iterations=self.gradient_iterations)
+                self.team_gradient = processing.sub_stats_gradient(gcsim_data, stat_subset=stat_subset,
                                                                    output_dir=self.output_dir)
                 pprint(self.team_gradient)
-                self.equipments_score = self.data.get_equipment_vector_weighted_options(actions, self.team_gradient)
+                self.equipments_score = self.data.get_equipment_vector_weighted_options(actions['team'], self.team_gradient)
 
             new_population = population.copy()
             new_population[:self.selection_size] = self.get_top_keys(self.selection_size)
