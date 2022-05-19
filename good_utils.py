@@ -210,8 +210,9 @@ class GoodData:
             normalized_weights = defaultdict(int)
             if len(weights.values()) > 0:
                 weights_max = max(weights.values())
-                for key, value in weights.items():
-                    normalized_weights[key] = value / weights_max
+                if weights_max > 0:
+                    for key, value in weights.items():
+                        normalized_weights[key] = value / weights_max
 
             weapon_type = character_weapon_type_map[team_list[i]]
             equipments_score.append([1 for _ in self.weapons[weapon_type]])

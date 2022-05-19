@@ -55,10 +55,11 @@ def get_stat_subset(team, character_lock=None, equipment_lock=None):
             continue
 
         stats = set(artifact_data.ATTRIBUTE_LIST)
-        if 'goblet' in equipment_lock[character]:
-            stats -= goblet_stats
-        if 'circlet' in equipment_lock[character]:
-            stats -= circlet_stats
+        if character in equipment_lock:
+            if 'goblet' in equipment_lock[character]:
+                stats -= goblet_stats
+            if 'circlet' in equipment_lock[character]:
+                stats -= circlet_stats
         stat_subset.extend([(i, stat_key) for stat_key in stats])
 
     return stat_subset

@@ -20,27 +20,10 @@ def fitness_worker(task_queue, result_queue, fitness_function, data, actions, re
             break
 
         j, vector, iterations, validation_penalty, force_write = item
-
-        team_info = data.get_team_build_by_vector(actions['team'], vector)
-        gcsim_data = GcsimData(team_info, actions, iterations=iterations)
-        penalty = 1
-        penalty *= restriction.validate_equipments(vector, actions['team'])
-        penalty *= restriction.validate_team(gcsim_data, restriction_rules['raw_sets'])
-
         result = fitness_function(vector, data, actions, iterations=iterations,
                                   validation_penalty=validation_penalty, force_write=force_write,
                                   temp_actions_path=temp_actions_path)
-        print({key: value for key, value in gcsim_data.characters[0].sets.items() if value > 0})
-        print(result['mean'], penalty, float(result['mean']) * penalty)
-        final_result = {
-            'mean': float(result['mean']) * penalty,
-            # Not sure if that's the correct way of considering penalty on the deviation
-            'std': float(result['std']) * penalty,
-            'min_dps': float(result['min_dps']) * penalty,
-            'max_dps': float(result['max_dps']) * penalty,
-        }
-
-        result_queue.put((j, final_result, iterations))
+        result_queue.put((j, result, iterations))
         task_queue.task_done()
 
 
@@ -59,6 +42,8 @@ def create_fitness_queue(fitness_function, data, actions, restriction_rules, num
 class GeneticAlgorithm:
     def __init__(self, data, fitness_function, num_workers=2, output_dir='output'):
         self.data = data
+        self.actions = None
+        self.restriction_rules = None
         self.fitness_function = fitness_function
         self.num_workers = num_workers
         self.task_queue = None
@@ -89,6 +74,7 @@ class GeneticAlgorithm:
         self.sum_sq_cache = defaultdict(float)
         self.runs_cache = defaultdict(int)
         self.fitness_cache = defaultdict(float)
+        self.penalty_cache = defaultdict(lambda: 1)
 
         # Final results
         self.best_key = ()
@@ -140,7 +126,7 @@ class GeneticAlgorithm:
 
     def get_deviation_cache(self, key):
         variance = (self.sum_sq_cache[key] / self.runs_cache[key]) - (self.sum_cache[key] / self.runs_cache[key]) ** 2
-        return math.sqrt(variance)
+        return math.sqrt(variance) * self.penalty_cache[key]
 
     def generate_deviation_cache(self):
         return {key: self.get_deviation_cache(key) for key in self.runs_cache.keys()}
@@ -189,12 +175,21 @@ class GeneticAlgorithm:
         population = np.where(self.equipment_mask, self.base_team, population)
         return population
 
+    def calculate_penalty(self, individual):
+        team_info = self.data.get_team_build_by_vector(self.actions['team'], individual)
+        gcsim_data = GcsimData(team_info, self.actions)
+        penalty = 1
+        penalty *= restriction.validate_equipments(individual, self.actions['team'])
+        penalty *= restriction.validate_team(gcsim_data, self.restriction_rules['raw_sets'])
+
+        return penalty
+
     def calculate_population_fitness(self, population):
         cache_lock = set()
 
         fitness = np.empty((population.shape[0],))
         for i, individual in enumerate(population):
-            cache_key = tuple(population[i])
+            cache_key = tuple(individual)
             if cache_key in cache_lock:
                 self.repeated_count += 1
                 continue
@@ -206,6 +201,7 @@ class GeneticAlgorithm:
 
             if self.runs_cache[cache_key] < self.initial_iterations:
                 self.task_queue.put((i, individual, self.initial_iterations, self.validation_penalty, True))
+                self.penalty_cache[cache_key] = self.calculate_penalty(individual)
                 self.initial_fitness_count += 1
                 continue
 
@@ -230,12 +226,14 @@ class GeneticAlgorithm:
             self.sum_sq_cache[cache_key] += (dev ** 2 + mean ** 2) * iterations
             self.runs_cache[cache_key] += iterations
             self.fitness_cache[cache_key] = self.sum_cache[cache_key] / self.runs_cache[cache_key]
+            self.fitness_cache[cache_key] *= self.penalty_cache[cache_key]
 
         self.best_key, self.best_fitness = max(self.fitness_cache.items(), key=lambda obj: obj[1])
         self.best_dev = self.get_deviation_cache(self.best_key)
 
         for i, individual in enumerate(population):
-            fitness[i] = int(self.fitness_cache[tuple(individual)])
+            cache_key = tuple(individual)
+            fitness[i] = int(self.fitness_cache[cache_key])
 
         return fitness
 
@@ -302,6 +300,9 @@ class GeneticAlgorithm:
 
     def run(self, actions, restriction_rules=None):
         os.makedirs(self.temp_actions_path, exist_ok=True)
+
+        self.actions = actions
+        self.restriction_rules = restriction_rules
 
         self.equipment_mask = restriction.get_equipments_mask(actions['team'], restriction_rules['equipment_lock'])
         self.character_mask = restriction.get_character_mask(actions['team'], restriction_rules['character_lock'])
