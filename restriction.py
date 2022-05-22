@@ -89,34 +89,3 @@ def check_repeated_equipment(equipment_vector, team):
             used_equipments.add(artifact_key)
 
     return 1
-
-
-def validate_team(gcsim_data, set_restriction):
-    penalty = 1
-    penalty *= check_artifact_set(gcsim_data, set_restriction)
-
-    return penalty
-
-
-def check_artifact_set(gcsim_data, set_restrictions):
-    penalty = 1
-    for character in gcsim_data.characters:
-        if character.key not in set_restrictions:
-            continue
-
-        found_set = False
-        for artifact_set in set_restrictions[character.key]['sets']:
-            is_valid = True
-            for set_key, set_amount in artifact_set.items():
-                if character.sets[set_key] < set_amount:
-                    is_valid = False
-                    break
-
-            if is_valid:
-                found_set = True
-                break
-
-        if not found_set:
-            penalty *= set_restrictions[character.key]['penalty']
-
-    return penalty

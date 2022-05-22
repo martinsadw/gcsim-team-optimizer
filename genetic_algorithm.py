@@ -187,15 +187,6 @@ class GeneticAlgorithm:
         population = np.where(self.equipment_mask, self.base_team, population)
         return population
 
-    def calculate_penalty(self, individual):
-        team_info = self.data.get_team_build_by_vector(self.actions['team'], individual)
-        gcsim_data = GcsimData(team_info, self.actions)
-        penalty = 1
-        penalty *= restriction.validate_equipments(individual, self.actions['team'])
-        penalty *= restriction.validate_team(gcsim_data, self.restriction_rules['raw_sets'])
-
-        return penalty
-
     def calculate_population_fitness(self, population):
         cache_lock = set()
 
@@ -262,8 +253,17 @@ class GeneticAlgorithm:
     def add_individual_hook(self, function, d):
         self.individual_hooks.append((function, d))
 
-    def add_penalty_hook(self, function, d):
-        self.penalty_hooks.append((function, d))
+    def add_penalty_hook(self, function, *args, **kwargs):
+        self.penalty_hooks.append((function, args, kwargs))
+
+    def calculate_penalty(self, individual):
+        penalty = 1
+        for hook_function, args, kwargs in self.penalty_hooks:
+            penalty = hook_function(self, penalty, individual, *args, **kwargs)
+
+        penalty *= restriction.validate_equipments(individual, self.actions['team'])
+
+        return penalty
 
     def selection(self, population, fitness):
         if self.selection_method == 'random':
@@ -350,19 +350,6 @@ class GeneticAlgorithm:
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
 
         self.equipments_score = self.calculate_equipment_score()
-        # self.equipments_score = self.data.get_equipment_vector_weighted_options(actions['team'], self.team_gradient)
-        # for i, character in enumerate(actions['team']):
-        #     char_key = character.lower()
-        #     if char_key in restriction_rules['raw_sets']:
-        #         required_sets = set()
-        #         for artifact_sets in restriction_rules['raw_sets'][char_key]['sets']:
-        #             required_sets |= set(artifact_sets.keys())
-        #
-        #         for j, slot in enumerate(('flower', 'plume', 'sands', 'goblet', 'circlet')):
-        #             equipments_score = self.equipments_score[i * self.character_length + j + 1]
-        #             for k in range(len(equipments_score)):
-        #                 if self.data.artifacts[slot][k].set_key.lower() in required_sets:
-        #                     equipments_score[k] *= 4
 
         population = self.generate_population()
         population[0] = self.base_team
