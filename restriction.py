@@ -2,7 +2,6 @@ import numpy as np
 
 import artifact_data
 from character_data import character_weapon_type_map
-from gcsim_utils import GcsimData
 
 EQUIPMENT_ID = {
     'weapon': 0,

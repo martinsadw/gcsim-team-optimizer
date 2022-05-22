@@ -13,6 +13,7 @@ from gcsim_utils import GcsimData
 from good_utils import GoodData
 import processing
 from stats import Stats
+from hooks.gradient import gradient_score_hook
 
 import action_files
 
@@ -119,26 +120,54 @@ def main():
 
     ##########################
 
-    # # Genetic Algorithm Class
-    # ga = GeneticAlgorithm(data, gcsim_fitness, output_dir=output_dir)
-    # build_vector, fitness = ga.run(gcsim_actions, restrictions)
-    # team_info = data.get_team_build_by_vector(gcsim_actions['team'], build_vector)
-    #
-    # with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
-    #     json_object = json.dumps(team_info, indent=4, default=default_json)
-    #     build_file.write(json_object)
-    #
-    # with open(os.path.join(output_dir, 'metadata.txt'), 'w') as metadata_file:
-    #     metadata_file.writelines([
-    #         'Best DPS: {}\n'.format(fitness),
-    #         'Build: {}\n'.format(build_vector)
-    #     ])
-    #
-    # gcsim_data = GcsimData(team_info, gcsim_actions, iterations=1000)
-    # gcsim_data.write_file(os.path.join(output_dir, 'actions_file.txt'))
-    #
-    # with open(os.path.join(output_dir, 'ga_debug.pickle'), 'wb') as ga_debug_file:
-    #     pickle.dump(ga, ga_debug_file)
+    # Genetic Algorithm Class
+    hook_data = {
+        'eula': {
+            'penalty': 0.0,
+            'sets': [
+                {'paleflame': 4},
+            ]
+        },
+        'rosaria': {
+            'penalty': 0.0,
+            'sets': [
+                {'noblesseoblige': 4},
+            ]
+        },
+        'raidenshogun': {
+            'penalty': 0.0,
+            'sets': [
+                {'emblemofseveredfate': 4}
+            ]
+        },
+    }
+    ga = GeneticAlgorithm(data, gcsim_fitness, output_dir=output_dir)
+    ga.add_equipment_score_hook(gradient_score_hook, iterations=1000, update_frequency=100)
+
+    build_vector, fitness = ga.run(gcsim_actions, restrictions)
+    team_info = data.get_team_build_by_vector(gcsim_actions['team'], build_vector)
+
+    with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
+        json_object = json.dumps(team_info, indent=4, default=default_json)
+        build_file.write(json_object)
+
+    with open(os.path.join(output_dir, 'metadata.txt'), 'w') as metadata_file:
+        metadata_file.writelines([
+            'Best DPS: {}\n'.format(fitness),
+            'Build: {}\n'.format(build_vector)
+        ])
+
+    gcsim_data = GcsimData(team_info, gcsim_actions, iterations=1000)
+    gcsim_data.write_file(os.path.join(output_dir, 'actions_file.txt'))
+
+    # # TODO(rodrigo): Save last gradient instead of first
+    # with open(os.path.join(self.output_dir, 'gradient.json'), 'w') as gradient_file:
+    #     gradient_data = dict(zip(actions['team'], self.team_gradient))
+    #     json_object = json.dumps(gradient_data, indent=4)
+    #     gradient_file.write(json_object)
+
+    with open(os.path.join(output_dir, 'ga_debug.pickle'), 'wb') as ga_debug_file:
+        pickle.dump(ga, ga_debug_file)
 
     ##########################
 
