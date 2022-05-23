@@ -13,7 +13,7 @@ import processing
 import restriction
 
 
-def fitness_worker(task_queue, result_queue, fitness_function, data, actions, restriction_rules, temp_actions_path=None):
+def fitness_worker(task_queue, result_queue, fitness_function, data, actions, temp_actions_path=None):
     while True:
         item = task_queue.get()
         if item is None:
@@ -27,12 +27,12 @@ def fitness_worker(task_queue, result_queue, fitness_function, data, actions, re
         task_queue.task_done()
 
 
-def create_fitness_queue(fitness_function, data, actions, restriction_rules, num_workers=1, temp_actions_path=None):
+def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_actions_path=None):
     task_queue = multiprocessing.JoinableQueue()
     result_queue = multiprocessing.Queue()
 
     for i in range(num_workers):
-        process_args = (task_queue, result_queue, fitness_function, data, actions, restriction_rules, temp_actions_path)
+        process_args = (task_queue, result_queue, fitness_function, data, actions, temp_actions_path)
         process = multiprocessing.Process(target=fitness_worker, args=process_args)
         process.start()
 
@@ -40,17 +40,16 @@ def create_fitness_queue(fitness_function, data, actions, restriction_rules, num
 
 
 class GeneticAlgorithm:
-    def __init__(self, data, fitness_function, num_workers=2, output_dir='output'):
+    def __init__(self, data, fitness_function, num_workers=1, output_dir='output'):
         self.data = data
         self.actions = None
-        self.restriction_rules = None
         self.fitness_function = fitness_function
         self.num_workers = num_workers
         self.task_queue = None
         self.result_queue = None
 
         # Optimization Parameters
-        self.num_iterations = 500
+        self.num_iterations = 300
         self.population_size = 200
         self.selection_size = 40
         self.validation_penalty = 1
@@ -326,16 +325,20 @@ class GeneticAlgorithm:
 
         return new_individual
 
-    def run(self, actions, restriction_rules=None):
+    def run(self, actions, character_lock=None, equipment_lock=None):
         os.makedirs(self.temp_actions_path, exist_ok=True)
 
-        self.actions = actions
-        self.restriction_rules = restriction_rules
-        self.character_lock = restriction_rules['character_lock']
-        self.equipment_lock = restriction_rules['equipment_lock']
+        if character_lock is None:
+            character_lock = []
+        if equipment_lock is None:
+            equipment_lock = dict()
 
-        self.character_mask = restriction.get_character_mask(actions['team'], restriction_rules['character_lock'])
-        self.equipment_mask = restriction.get_equipments_mask(actions['team'], restriction_rules['equipment_lock'])
+        self.actions = actions
+        self.character_lock = character_lock
+        self.equipment_lock = equipment_lock
+
+        self.character_mask = restriction.get_character_mask(actions['team'], self.character_lock)
+        self.equipment_mask = restriction.get_equipments_mask(actions['team'], self.equipment_lock)
         self.equipment_mask = np.logical_or(
             self.equipment_mask,
             np.repeat(self.character_mask, self.character_length)
@@ -344,7 +347,7 @@ class GeneticAlgorithm:
         self.best_key = tuple(self.base_team)
 
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
-                                                                  restriction_rules, num_workers=self.num_workers,
+                                                                  num_workers=self.num_workers,
                                                                   temp_actions_path=self.temp_actions_path)
 
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])

@@ -29,37 +29,30 @@ def default_json(x):
 
 
 def main():
-    restrictions = {
-        'raw_sets': {
-            'hutao': {
-                'penalty': 0.0,
-                'sets': [
-                    {'gladiatorsfinale': 4},
-                    {'gladiatorsfinale': 2, 'shimenawasreminiscence': 2},
-                    {'wandererstroupe': 4},
-                ]
-            }
+    set_restrictions = {
+        'noelle': {
+            'penalty': 0.0,
+            'sets': [
+                {'gladiator': 4},
+                {'huskofopulentdreams': 4},
+            ]
         },
-        'sets': {
-            '2sets': [
-                'gladiatorsfinale',
-                'shimenawasreminiscence',
-                'crimsonwitchofflames',
-            ],
-            '4set': [
-                'wandererstroupe',
-            ],
+        'zhongli': {
+            'penalty': 0.0,
+            'sets': [
+                {'tenacityofthemillelith': 4},
+            ]
         },
-        'character_lock': [
-            'Zhongli',
-            'Albedo',
-        ],
-        'equipment_lock': {
-            'Bennett': ['flower', 'plume'],
-            'Noelle': ['goblet'],
-            'HuTao': ['weapon', 'circlet'],
-            'Xingqiu': ['goblet'],
-        },
+    }
+    character_lock = [
+        # 'Albedo',
+    ],
+    equipment_lock = {
+        # 'Zhongli': ['flower', 'plume', 'sands', 'goblet', 'circlet'],
+        # 'Bennett': ['flower', 'plume'],
+        # 'Noelle': ['goblet'],
+        # 'HuTao': ['weapon', 'circlet'],
+        # 'Xingqiu': ['goblet'],
     }
 
     good_filename = 'data/data.json'
@@ -122,27 +115,12 @@ def main():
     ##########################
 
     # Genetic Algorithm Class
-    set_restrictions = {
-        'noelle': {
-            'penalty': 0.0,
-            'sets': [
-                {'gladiator': 4},
-                {'huskofopulentdreams': 4},
-            ]
-        },
-        'zhongli': {
-            'penalty': 0.0,
-            'sets': [
-                {'tenacityofthemillelith': 4},
-            ]
-        },
-    }
     ga = GeneticAlgorithm(data, gcsim_fitness, output_dir=output_dir)
     ga.add_equipment_score_hook(gradient_score_hook, iterations=1000, update_frequency=100)
-    ga.add_equipment_score_hook(set_score_hook, set_restrictions)
-    ga.add_penalty_hook(set_penalty_hook, set_restrictions, score_boost=50)
+    ga.add_equipment_score_hook(set_score_hook, set_restrictions, score_boost=50)
+    ga.add_penalty_hook(set_penalty_hook, set_restrictions)
 
-    build_vector, fitness = ga.run(gcsim_actions, restrictions)
+    build_vector, fitness = ga.run(gcsim_actions, character_lock=character_lock, equipment_lock=equipment_lock)
     team_info = data.get_team_build_by_vector(gcsim_actions['team'], build_vector)
 
     with open(os.path.join(output_dir, 'build_{}.json'.format(team_slug)), 'w') as build_file:
