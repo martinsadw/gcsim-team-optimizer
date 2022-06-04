@@ -1,3 +1,7 @@
+from collections import defaultdict
+import random
+
+import artifact_data
 from gcsim_utils import GcsimData
 
 
@@ -50,3 +54,45 @@ def set_penalty_hook(optimizer, penalty, individual, set_restrictions):
             penalty *= set_restrictions[character.key]['penalty']
 
     return penalty
+
+
+def set_proximity_hook(optimizer, individual, set_restrictions):
+    team_info = optimizer.data.get_team_build_by_vector(optimizer.actions['team'], individual)
+    gcsim_data = GcsimData(team_info, optimizer.actions)
+    for i, character in enumerate(gcsim_data.characters):
+        if character.key not in set_restrictions:
+            continue
+
+        selected_set = defaultdict(int, random.choice(set_restrictions[character.key]['sets']))
+        character_set = defaultdict(int, character.sets)
+        # Sets that can be removed
+        plus_set = {key for key, value in character_set.items() if value > selected_set[key]}
+        # Sets that need to be added
+        minus_set = {key for key, value in selected_set.items() if value > character_set[key]}
+
+        slot_order = list(range(1, 6))
+        random.shuffle(slot_order)
+        for slot in slot_order:
+            slot_name = artifact_data.EQUIPMENT_NAME[slot]
+            # print(f'Trying slot {slot_name} (id={slot})')
+            slot_artifact = team_info[i]['artifacts'][slot_name]
+            slot_index = i * optimizer.character_length + slot
+
+            # Check if the slot set can be removed
+            if slot_artifact.set_key.lower() not in plus_set:
+                continue
+
+            # Get all artifact of the same slot with a set that needs to be added
+            valid_artifacts = optimizer.data.get_artifacts_piece_by_condition(
+                slot_name,
+                lambda a: a.set_key.lower() in minus_set
+            )
+            if len(valid_artifacts) <= 0:
+                continue
+
+            # Select a random artifact to be used
+            new_artifact_index, artifact = random.choice(valid_artifacts)
+            individual[slot_index] = new_artifact_index
+            break
+
+    return individual

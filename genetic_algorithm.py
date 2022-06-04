@@ -71,7 +71,7 @@ class GeneticAlgorithm:
 
         # Optimization Hooks
         self.equipments_score_hooks = []
-        self.individual_hooks = []
+        self.mutation_hooks = []
         self.penalty_hooks = []
         self.extra_data = {}
 
@@ -125,8 +125,8 @@ class GeneticAlgorithm:
         state = self.__dict__.copy()
         for i, (hook_function, args, kwargs) in enumerate(state['equipments_score_hooks']):
             state['equipments_score_hooks'][i] = (hook_function.__name__, args, kwargs)
-        for i, (hook_function, args, kwargs) in enumerate(state['individual_hooks']):
-            state['individual_hooks'][i] = (hook_function.__name__, args, kwargs)
+        for i, (hook_function, args, kwargs) in enumerate(state['mutation_hooks']):
+            state['mutation_hooks'][i] = (hook_function.__name__, args, kwargs)
         for i, (hook_function, args, kwargs) in enumerate(state['penalty_hooks']):
             state['penalty_hooks'][i] = (hook_function.__name__, args, kwargs)
 
@@ -249,8 +249,14 @@ class GeneticAlgorithm:
 
         return equipments_score
 
-    def add_individual_hook(self, function, d):
-        self.individual_hooks.append((function, d))
+    def add_mutation_hook(self, function, *args, **kwargs):
+        self.mutation_hooks.append((function, args, kwargs))
+
+    def custom_mutation(self, individual):
+        for hook_function, args, kwargs in self.mutation_hooks:
+            individual = hook_function(self, individual, *args, **kwargs)
+
+        return individual
 
     def add_penalty_hook(self, function, *args, **kwargs):
         self.penalty_hooks.append((function, args, kwargs))
@@ -378,6 +384,7 @@ class GeneticAlgorithm:
                 parents = self.selection(population, fitness)
                 new_individual = self.crossover(parents)
                 new_individual = self.mutation(new_individual)
+                new_individual = self.custom_mutation(new_individual)
                 new_population[j] = new_individual
 
             new_fitness = self.calculate_population_fitness(new_population)

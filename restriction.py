@@ -3,19 +3,10 @@ import numpy as np
 import artifact_data
 from character_data import character_weapon_type_map
 
-EQUIPMENT_ID = {
-    'weapon': 0,
-    'flower': 1,
-    'plume': 2,
-    'sands': 3,
-    'goblet': 4,
-    'circlet': 5,
-}
-
 
 def get_equipments_mask(team, equipment_lock):
     quant_characters = len(team)
-    character_length = len(EQUIPMENT_ID.keys())
+    character_length = len(artifact_data.EQUIPMENT_ID.keys())
     equipments_mask = np.zeros((quant_characters * character_length,), dtype=bool)
     for character, slots in equipment_lock.items():
         try:
@@ -24,7 +15,7 @@ def get_equipments_mask(team, equipment_lock):
             continue
 
         for slot in slots:
-            slot_index = EQUIPMENT_ID[slot]
+            slot_index = artifact_data.EQUIPMENT_ID[slot]
             equip_index = character_length * char_index + slot_index
             equipments_mask[equip_index] = True
 
@@ -72,7 +63,7 @@ def validate_equipments(equipment_vector, team):
 
 
 def check_repeated_equipment(equipment_vector, team):
-    character_length = len(EQUIPMENT_ID.keys())
+    character_length = len(artifact_data.EQUIPMENT_ID.keys())
     used_equipments = set()
     for i, character_name in enumerate(team):
         weapon_type = character_weapon_type_map[character_name]

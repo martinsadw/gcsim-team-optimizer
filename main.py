@@ -14,7 +14,7 @@ from good_utils import GoodData
 import processing
 from stats import Stats
 from hooks.gradient import gradient_score_hook
-from hooks.set_restriction import set_score_hook, set_penalty_hook
+from hooks.set_restriction import set_score_hook, set_penalty_hook, set_proximity_hook
 
 import action_files
 
@@ -33,7 +33,7 @@ def main():
         'noelle': {
             'penalty': 0.0,
             'sets': [
-                {'gladiator': 4},
+                {'gladiatorsfinale': 4},
                 {'huskofopulentdreams': 4},
             ]
         },
@@ -118,6 +118,7 @@ def main():
     ga = GeneticAlgorithm(data, gcsim_fitness, output_dir=output_dir)
     ga.add_equipment_score_hook(gradient_score_hook, iterations=1000, update_frequency=100)
     ga.add_equipment_score_hook(set_score_hook, set_restrictions, score_boost=50)
+    ga.add_mutation_hook(set_proximity_hook, set_restrictions)
     ga.add_penalty_hook(set_penalty_hook, set_restrictions)
 
     build_vector, fitness = ga.run(gcsim_actions, character_lock=character_lock, equipment_lock=equipment_lock)
