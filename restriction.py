@@ -2,21 +2,11 @@ import numpy as np
 
 import artifact_data
 from character_data import character_weapon_type_map
-from gcsim_utils import GcsimData
-
-EQUIPMENT_ID = {
-    'weapon': 0,
-    'flower': 1,
-    'plume': 2,
-    'sands': 3,
-    'goblet': 4,
-    'circlet': 5,
-}
 
 
 def get_equipments_mask(team, equipment_lock):
     quant_characters = len(team)
-    character_length = len(EQUIPMENT_ID.keys())
+    character_length = len(artifact_data.EQUIPMENT_ID.keys())
     equipments_mask = np.zeros((quant_characters * character_length,), dtype=bool)
     for character, slots in equipment_lock.items():
         try:
@@ -25,7 +15,7 @@ def get_equipments_mask(team, equipment_lock):
             continue
 
         for slot in slots:
-            slot_index = EQUIPMENT_ID[slot]
+            slot_index = artifact_data.EQUIPMENT_ID[slot]
             equip_index = character_length * char_index + slot_index
             equipments_mask[equip_index] = True
 
@@ -73,7 +63,7 @@ def validate_equipments(equipment_vector, team):
 
 
 def check_repeated_equipment(equipment_vector, team):
-    character_length = len(EQUIPMENT_ID.keys())
+    character_length = len(artifact_data.EQUIPMENT_ID.keys())
     used_equipments = set()
     for i, character_name in enumerate(team):
         weapon_type = character_weapon_type_map[character_name]
@@ -90,34 +80,3 @@ def check_repeated_equipment(equipment_vector, team):
             used_equipments.add(artifact_key)
 
     return 1
-
-
-def validate_team(gcsim_data, set_restriction):
-    penalty = 1
-    penalty *= check_artifact_set(gcsim_data, set_restriction)
-
-    return penalty
-
-
-def check_artifact_set(gcsim_data, set_restrictions):
-    penalty = 1
-    for character in gcsim_data.characters:
-        if character.key not in set_restrictions:
-            continue
-
-        found_set = False
-        for artifact_set in set_restrictions[character.key]['sets']:
-            is_valid = True
-            for set_key, set_amount in artifact_set.items():
-                if character.sets[set_key] < set_amount:
-                    is_valid = False
-                    break
-
-            if is_valid:
-                found_set = True
-                break
-
-        if not found_set:
-            penalty *= set_restrictions[character.key]['penalty']
-
-    return penalty

@@ -92,6 +92,12 @@ class GoodData:
             for weapon in weapons_type:
                 weapon.upgrade()
 
+    def get_artifacts_piece_by_condition(self, artifact_type, condition_function):
+        artifacts = self.artifacts[artifact_type]
+        valid_artifacts = [(i, artifact) for i, artifact in enumerate(artifacts) if condition_function(artifact)]
+
+        return valid_artifacts
+
     def get_artifact_piece_by_character(self, artifact_type, character_name):
         for artifact in self.artifacts[artifact_type]:
             if artifact.location == character_name:

@@ -87,7 +87,7 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
     plt.show()
 
 
-def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output'):
+def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output', sub_stat_multiplier=2):
     team_gradient = [dict() for _ in range(len(base_gcsim_data.characters))]
 
     temp_actions_path = os.path.join(output_dir, 'temp_sub_stats')
@@ -96,7 +96,6 @@ def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output'):
     temp_actions_filename = os.path.join(temp_actions_path, 'base.txt')
     base_dps = base_gcsim_data.run(temp_actions_filename, keep_file=True)
 
-    sub_stat_multiplier = 2
     if stat_subset is None:
         stat_subset = [(i, stat_key)
                        for i in range(len(base_gcsim_data.characters))
