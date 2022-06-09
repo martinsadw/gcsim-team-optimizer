@@ -82,10 +82,14 @@ class GcsimData:
         gcsim_result = subprocess.run([exec_path, '-c', filename], capture_output=True)
         dps = re.search(GCSIM_DPS_REGEX, gcsim_result.stdout.decode('utf-8'), re.MULTILINE)
 
-        # print('DPS:', dps['mean'])
-        # print('Min:', dps['min_dps'])
-        # print('Max:', dps['max_dps'])
-        # print('Std:', dps['std'])
+        if dps is None:
+            return {
+                'mean': 0,
+                'min_dps': 0,
+                'max_dps': 0,
+                'std': 0,
+            }
+
         return dps.groupdict()
 
 
