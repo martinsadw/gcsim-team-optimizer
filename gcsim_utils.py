@@ -1,4 +1,6 @@
 from collections import defaultdict
+import ctypes
+import json
 import os
 import re
 import subprocess
@@ -8,7 +10,69 @@ from stats import Stats
 
 
 GCSIM_DPS_REGEX = r"resulting in (?P<mean>-?[\d\.]+) dps " \
-                  r"\(min: (?P<min_dps>-?[\d\.]+) max: (?P<max_dps>-?[\d\.]+) std: (?P<std>-?[\d\.]+)\)"
+                  r"\(min: (?P<min>-?[\d\.]+) max: (?P<max>-?[\d\.]+) std: (?P<sd>-?[\d\.]+)\)"
+
+
+class GcsimExeRunner:
+    def __init__(self, exec_path):
+        self.exec_path = exec_path
+        self.has_parser = False
+
+    def parse_config(self, filename):
+        raise NotImplementedError
+
+    def run_json(self, json_data):
+        raise NotImplementedError
+
+    def run_file(self, filename):
+        result = subprocess.run([self.exec_path, '-c', filename], capture_output=True)
+        dps = re.search(GCSIM_DPS_REGEX, result.stdout.decode('utf-8'), re.MULTILINE)
+
+        if dps is None:
+            return {
+                'mean': 0,
+                'min': 0,
+                'max': 0,
+                'sd': 0,
+            }
+
+        return dps.groupdict()
+
+
+class GoString(ctypes.Structure):
+    _fields_ = [('p', ctypes.c_char_p),
+                ('n', ctypes.c_int)]
+
+
+class GcsimLibRunner:
+    def __init__(self, lib_path):
+        self._lib = ctypes.CDLL(lib_path)
+        self._lib.parse_config.restype = ctypes.c_char_p
+        self._lib.run_json.restype = ctypes.c_char_p
+        self._lib.run_file.restype = ctypes.c_char_p
+        self.has_parser = True
+
+    def parse_config(self, filename):
+        bytes_filename = bytes(filename, encoding="utf-8")
+        result = self._lib.parse_config(GoString(bytes_filename, len(bytes_filename)))
+        return json.loads(result)
+
+    def run_json(self, json_data):
+        bytes_json_data = bytes(json.dumps(json_data), encoding="utf-8")
+        result = self._lib.run_json(GoString(bytes_json_data, len(bytes_json_data)))
+        return json.loads(result)
+
+    def run_file(self, filename):
+        bytes_filename = bytes(filename, encoding="utf-8")
+        result = self._lib.run_file(GoString(bytes_filename, len(bytes_filename)))
+        return json.loads(result)
+
+
+try:
+    default_runner = GcsimLibRunner(settings.DEFAULT_LIB_PATH)
+except FileNotFoundError:
+    print(f"{settings.DEFAULT_LIB_NAME} not found. Using {settings.DEFAULT_EXEC_NAME}")
+    default_runner = GcsimExeRunner(settings.DEFAULT_EXEC_PATH)
 
 
 class GcsimData:
@@ -60,12 +124,12 @@ class GcsimData:
         with open(filename, 'w') as file:
             file.write(str(self))
 
-    def run(self, temp_file=None, exec_path=None, keep_file=False):
+    def run(self, temp_file=None, runner=None, keep_file=False):
         if temp_file is None:
             temp_file = os.path.join(settings.DEFAULT_OUTPUT_PATH, 'temp.txt')
 
         self.write_file(temp_file)
-        dps = self.run_file(temp_file, exec_path=exec_path)
+        dps = self.run_file(temp_file, runner=runner)
         if not keep_file:
             try:
                 os.remove(temp_file)
@@ -75,22 +139,13 @@ class GcsimData:
         return dps
 
     @staticmethod
-    def run_file(filename, exec_path=None):
-        if exec_path is None:
-            exec_path = settings.DEFAULT_EXEC_PATH
+    def run_file(filename, runner=None):
+        if runner is None:
+            runner = default_runner
 
-        gcsim_result = subprocess.run([exec_path, '-c', filename], capture_output=True)
-        dps = re.search(GCSIM_DPS_REGEX, gcsim_result.stdout.decode('utf-8'), re.MULTILINE)
+        gcsim_result = runner.run_file(filename)
 
-        if dps is None:
-            return {
-                'mean': 0,
-                'min_dps': 0,
-                'max_dps': 0,
-                'std': 0,
-            }
-
-        return dps.groupdict()
+        return gcsim_result
 
 
 class GcsimCharacter:
@@ -179,7 +234,7 @@ def gcsim_fitness(vector, data, actions, iterations=10, force_write=True, valida
             stats['invalid'] += 1
 
         if validation_penalty >= 1:
-            return {'mean': '0', 'min_dps': '0.00', 'max_dps': '0.00', 'std': '0.00'}
+            return {'mean': '0', 'min': '0.00', 'max': '0.00', 'sd': '0.00'}
 
     if temp_actions_path is None:
         temp_actions_path = os.path.join('actions', 'temp_gcsim')

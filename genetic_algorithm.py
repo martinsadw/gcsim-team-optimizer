@@ -220,7 +220,7 @@ class GeneticAlgorithm:
         while not self.result_queue.empty():
             i, result, iterations = self.result_queue.get()
             mean = float(result['mean'])
-            dev = float(result['std'])
+            dev = float(result['sd'])
 
             # Reference: https://math.stackexchange.com/a/1379804
             cache_key = tuple(population[i])

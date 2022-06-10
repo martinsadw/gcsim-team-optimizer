@@ -1,4 +1,8 @@
 import os
 
-DEFAULT_EXEC_PATH = os.path.join('.', 'gcsim')
+DEFAULT_LIB_NAME = 'gcsim.so'
+DEFAULT_EXEC_NAME = 'gcsim.exe'
+DEFAULT_PATH = '.'
+DEFAULT_LIB_PATH = os.path.join(DEFAULT_PATH, DEFAULT_LIB_NAME)
+DEFAULT_EXEC_PATH = os.path.join(DEFAULT_PATH, DEFAULT_EXEC_NAME)
 DEFAULT_OUTPUT_PATH = 'output'
