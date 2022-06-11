@@ -32,6 +32,7 @@ character_weapon_type_map = {
     'Rosaria': 'polearm',
     'SangonomiyaKokomi': 'catalyst',
     'Sayu': 'claymore',
+    'Shenhe': 'polearm',
     'Sucrose': 'catalyst',
     'Tartaglia': 'bow',
     'Thoma': 'polearm',
@@ -43,8 +44,10 @@ character_weapon_type_map = {
     'Xinyan': 'claymore',
     'Yanfei': 'catalyst',
     'YaeMiko': 'catalyst',
+    'Yelan': 'bow',
+    'Yunjin': 'polearm',
     'Yoimiya': 'bow',
-    'Zhongli': 'polearm'
+    'Zhongli': 'polearm',
 }
 
 character_element_map = {
