@@ -13,7 +13,8 @@ import processing
 import restriction
 
 
-def fitness_worker(task_queue, result_queue, fitness_function, data, actions, temp_actions_path=None):
+def fitness_worker(task_queue, result_queue, fitness_function, data, actions, temp_actions_path=None,
+                   runner=None, parsed_data=None):
     while True:
         item = task_queue.get()
         if item is None:
@@ -22,17 +23,20 @@ def fitness_worker(task_queue, result_queue, fitness_function, data, actions, te
         j, vector, iterations, validation_penalty, force_write = item
         result = fitness_function(vector, data, actions, iterations=iterations,
                                   validation_penalty=validation_penalty, force_write=force_write,
-                                  temp_actions_path=temp_actions_path)
+                                  temp_actions_path=temp_actions_path,
+                                  runner=runner, parsed_data=parsed_data)
         result_queue.put((j, result, iterations))
         task_queue.task_done()
 
 
-def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_actions_path=None):
+def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_actions_path=None,
+                         runner=None, parsed_data=None):
     task_queue = multiprocessing.JoinableQueue()
     result_queue = multiprocessing.Queue()
 
     for i in range(num_workers):
-        process_args = (task_queue, result_queue, fitness_function, data, actions, temp_actions_path)
+        process_args = (task_queue, result_queue, fitness_function, data, actions, temp_actions_path,
+                        runner, parsed_data)
         process = multiprocessing.Process(target=fitness_worker, args=process_args)
         process.start()
 
@@ -40,13 +44,14 @@ def create_fitness_queue(fitness_function, data, actions, num_workers=1, temp_ac
 
 
 class GeneticAlgorithm:
-    def __init__(self, data, fitness_function, num_workers=1, output_dir='output'):
+    def __init__(self, data, fitness_function, num_workers=1, output_dir='output', runner=None):
         self.data = data
         self.actions = None
         self.fitness_function = fitness_function
         self.num_workers = num_workers
         self.task_queue = None
         self.result_queue = None
+        self.runner = runner
 
         # Optimization Parameters
         self.num_iterations = 300
@@ -114,6 +119,7 @@ class GeneticAlgorithm:
         self.character_mask = None
         self.team_gradient = None
         self.equipments_score = None
+        self.parsed_data = None
 
         # Output Variables
         self.output_dir = output_dir
@@ -352,9 +358,15 @@ class GeneticAlgorithm:
         self.base_team = self.data.get_team_vector(actions['team'])
         self.best_key = tuple(self.base_team)
 
+        team_info = self.data.get_team_build_by_vector(actions['team'], self.base_team)
+        base_gcsim_data = GcsimData(team_info, actions, iterations=self.initial_iterations)
+        base_team_path = os.path.join(self.temp_actions_path, 'base_team.txt')
+        self.parsed_data = base_gcsim_data.parse_config(base_team_path, runner=self.runner)
+
         self.task_queue, self.result_queue = create_fitness_queue(self.fitness_function, self.data, actions,
                                                                   num_workers=self.num_workers,
-                                                                  temp_actions_path=self.temp_actions_path)
+                                                                  temp_actions_path=self.temp_actions_path,
+                                                                  runner=self.runner, parsed_data=self.parsed_data)
 
         self.quant_options = self.data.get_equipment_vector_quant_options(actions['team'])
 

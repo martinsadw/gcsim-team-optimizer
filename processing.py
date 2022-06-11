@@ -87,14 +87,14 @@ def plot_set_count(data, labels, weight_function, thresholds=None):
     plt.show()
 
 
-def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output', sub_stat_multiplier=2):
+def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output', sub_stat_multiplier=2, runner=None):
     team_gradient = [dict() for _ in range(len(base_gcsim_data.characters))]
 
     temp_actions_path = os.path.join(output_dir, 'temp_sub_stats')
     os.makedirs(temp_actions_path, exist_ok=True)
 
     temp_actions_filename = os.path.join(temp_actions_path, 'base.txt')
-    base_dps = base_gcsim_data.run(temp_actions_filename, keep_file=True)
+    base_dps = base_gcsim_data.run(temp_actions_filename, runner=runner, keep_file=True)
 
     if stat_subset is None:
         stat_subset = [(i, stat_key)
@@ -121,7 +121,7 @@ def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output', s
             new_stat = Stats.by_artifact_sub_stat(stat_key, sub_stat_multiplier * point)
             gcsim_data = copy.deepcopy(base_gcsim_data)
             gcsim_data.characters[i].extra_stats += new_stat
-            dps = float(gcsim_data.run(temp_actions_filename, keep_file=True)['mean'])
+            dps = float(gcsim_data.run(temp_actions_filename, runner=runner, keep_file=True)['mean'])
             deviation += dps * coefficient
 
         deviation /= sub_stat_multiplier

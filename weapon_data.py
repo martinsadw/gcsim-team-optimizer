@@ -130,3 +130,16 @@ weapon_type_map = {
     'WineAndSong': 'catalyst',
     'WolfsGravestone': 'claymore'
 }
+
+good_to_gcsim_weapon = {key: key.lower() for key in weapon_type_map.keys()}
+gcsim_to_good_weapon = {value: key for key, value in good_to_gcsim_weapon.items()}
+
+gcsim_weapon_class_to_string = [
+    'sword',
+    'claymore',
+    'polearm',
+    'bow',
+    'catalyst',
+    'EndWeaponClass',
+]
+string_to_gcsim_weapon_class = {key: i for i, key in enumerate(gcsim_weapon_class_to_string)}
