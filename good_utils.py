@@ -74,7 +74,7 @@ class GoodData:
             character.upgrade()
 
     def add_character(self, character_name, constellation=0):
-        new_character = {
+        new_character_data = {
             'level': 90,
             'ascension': 6,
             'constellation': constellation,
@@ -85,12 +85,32 @@ class GoodData:
             },
             'key': character_name
         }
-        self.characters.append(Character(new_character, len(self.characters)))
+        new_character = Character(new_character_data, len(self.characters))
+        self.characters.append(new_character)
+
+        return new_character
 
     def upgrade_weapons(self):
         for weapons_type in self.weapons.values():
             for weapon in weapons_type:
                 weapon.upgrade()
+
+    def add_weapon(self, weapon_name, refinement=1):
+        weapon_id = sum([len(weapons_type) for weapons_type in self.weapons.values()])
+        new_weapon_data = {
+            'key': weapon_name,
+            'level': 90,
+            'ascension': 6,
+            'refinement': refinement,
+            'location': '',
+            'lock': False,
+            'id': weapon_id,
+        }
+        weapon_type = weapon_type_map[weapon_name]
+        new_weapon = Weapon(new_weapon_data, weapon_id)
+        self.weapons[weapon_type].append(new_weapon)
+
+        return new_weapon
 
     def get_artifacts_piece_by_condition(self, artifact_type, condition_function):
         artifacts = self.artifacts[artifact_type]
