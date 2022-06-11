@@ -6,7 +6,7 @@ from stats import Stats
 
 class Artifact:
     def __init__(self, artifact):
-        self.id = artifact['Id']
+        self.id = artifact['id']
         self.slot = artifact['slotKey']
         self.level = artifact['level']
         self.rarity = artifact['rarity']

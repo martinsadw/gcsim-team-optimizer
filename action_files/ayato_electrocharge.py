@@ -18,6 +18,7 @@ restart;
 action = {
   'name': 'ayato_electrocharge',
   'team': ['KamisatoAyato', 'Beidou', 'Fischl', 'KaedeharaKazuha'],
+  'active': 'Ayato',
   'simulation_length': 125,
   'mode': 'sl',
   'actions': action_txt,

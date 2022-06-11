@@ -14,6 +14,7 @@ restart;
 action = {
   'name': 'itto_monogeo',
   'team': ['AratakiItto', 'Albedo', 'Zhongli', 'Gorou'],
+  'active': 'Zhongli',
   'simulation_length': 102,
   'mode': 'sl',
   'actions': action_txt,

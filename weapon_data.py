@@ -4,6 +4,7 @@ weapon_type_map = {
     'AmenomaKageuchi': 'sword',
     'AmosBow': 'bow',
     'ApprenticesNotes': 'catalyst',
+    'AquaSimulacra': 'bow',
     'AquilaFavonia': 'sword',
     'BeginnersProtector': 'polearm',
     'BlackTassel': 'polearm',
@@ -13,6 +14,7 @@ weapon_type_map = {
     'BlackcliffSlasher': 'claymore',
     'BlackcliffWarbow': 'bow',
     'BloodtaintedGreatsword': 'claymore',
+    'CalamityQueller': 'polearm',
     'CinnabarSpindle': 'sword',
     'CompoundBow': 'bow',
     'CoolSteel': 'sword',
@@ -130,3 +132,16 @@ weapon_type_map = {
     'WineAndSong': 'catalyst',
     'WolfsGravestone': 'claymore'
 }
+
+good_to_gcsim_weapon = {key: key.lower() for key in weapon_type_map.keys()}
+gcsim_to_good_weapon = {value: key for key, value in good_to_gcsim_weapon.items()}
+
+gcsim_weapon_class_to_string = [
+    'sword',
+    'claymore',
+    'polearm',
+    'bow',
+    'catalyst',
+    'EndWeaponClass',
+]
+string_to_gcsim_weapon_class = {key: i for i, key in enumerate(gcsim_weapon_class_to_string)}

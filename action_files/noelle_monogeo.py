@@ -21,6 +21,7 @@ restart;
 action = {
   'name': 'noelle_monogeo',
   'team': ['Noelle', 'Albedo', 'Zhongli', 'Gorou'],
+  'active': 'Zhongli',
   'simulation_length': 90,
   'mode': 'sl',
   'actions': action_txt,

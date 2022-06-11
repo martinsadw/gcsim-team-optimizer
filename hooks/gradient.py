@@ -12,10 +12,11 @@ def gradient_score_hook(optimizer, score, update_frequency=100, iterations=1000,
     if not have_gradient or (optimizer.current_iteration + 1) % update_frequency == 0:
         print('{C}alculating team gradient...'.format(C='C' if not have_gradient else 'Rec'))
         team_info = optimizer.data.get_team_build_by_vector(team_list, optimizer.best_key)
-        gcsim_data = GcsimData(team_info, optimizer.actions, iterations=iterations)
+        gcsim_data = GcsimData(team_info, optimizer.actions, iterations=iterations, parsed_data=optimizer.parsed_data)
         team_gradient = processing.sub_stats_gradient(gcsim_data, stat_subset=stat_subset,
                                                       output_dir=optimizer.output_dir,
-                                                      sub_stat_multiplier=sub_stat_multiplier)
+                                                      sub_stat_multiplier=sub_stat_multiplier,
+                                                      runner=optimizer.runner)
 
         gradient_score = optimizer.data.get_equipment_vector_weighted_options(team_list, team_gradient)
 

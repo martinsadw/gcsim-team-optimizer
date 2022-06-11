@@ -14,6 +14,7 @@ restart;
 action = {
   'name': 'eula_bennett',
   'team': ['Eula', 'RaidenShogun', 'Bennett', 'Rosaria'],
+  'active': 'RaidenShogun',
   'simulation_length': 110,
   'mode': 'sl',
   'actions': action_txt,

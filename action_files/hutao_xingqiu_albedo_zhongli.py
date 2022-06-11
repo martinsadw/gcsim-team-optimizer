@@ -50,6 +50,7 @@ xingqiu attack;
 action = {
   'name': 'hutao_xingqiu_albedo_zhongli',
   'team': ['HuTao', 'Xingqiu', 'Albedo', 'Zhongli'],
+  'active': 'Xingqiu',
   'simulation_length': 90,
   'mode': 'apl',
   'actions': action_txt,

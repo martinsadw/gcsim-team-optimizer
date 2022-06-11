@@ -236,3 +236,30 @@ SET_READABLE_SHORT = {
   "ViridescentVenerer": "Viridescent",
   "WanderersTroupe": "Wanderer",
 }
+
+gcsim_stat_to_string = [
+    'n/a',
+    'def_',
+    'def',
+    'hp',
+    'hp_',
+    'atk',
+    'atk_',
+    'enerRech_',
+    'eleMas',
+    'critRate_',
+    'critDMG_',
+    'heal_',
+    'pyro_dmg_',
+    'hydro_dmg_',
+    'cryo_dmg_',
+    'electro_dmg_',
+    'anemo_dmg_',
+    'geo_dmg_',
+    'physical_dmg_',
+    # 'ele_dmg_',
+    'dendro_dmg_',
+    'atk_spd_',  # Not represented in GOOD
+    'dmg_',  # Not represented in GOOD
+]
+string_to_gcsim_stat = {key: i for i, key in enumerate(gcsim_stat_to_string)}
