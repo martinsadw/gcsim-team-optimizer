@@ -1,12 +1,12 @@
-import artifact_data
 from gcsim_names import good_to_gcsim_stats
+from static import stats_data
 
 
 class Stats:
-    __slots__ = artifact_data.ATTRIBUTE_LIST
+    __slots__ = stats_data.ATTRIBUTE_LIST
 
     def __init__(self, **kwargs):
-        for attribute in artifact_data.ATTRIBUTE_LIST:
+        for attribute in stats_data.ATTRIBUTE_LIST:
             setattr(self, attribute, kwargs.get(attribute, 0))
 
     @classmethod
@@ -28,11 +28,11 @@ class Stats:
 
     @staticmethod
     def main_stat(stat_key, level):
-        return artifact_data.MAIN_STAT[stat_key][level]
+        return stats_data.main_stat(stat_key, level=level)
 
     @staticmethod
     def sub_stat(stat_key, quant=1, quality=1, rarity_reference=5):
-        return quant * quality * artifact_data.MAX_SUB_STAT[stat_key][rarity_reference]
+        return quant * quality * stats_data.sub_stat(stat_key, rarity=rarity_reference)
 
     def to_gcsim_text(self):
         text = ' '.join(['{key}={value:.2f}'.format(key=good_to_gcsim_stats[attribute], value=value)
@@ -43,7 +43,7 @@ class Stats:
     def calculate_power(self, rarity_reference=5):
         power = 0
         for key, sub_stat in self.items():
-            power += sub_stat / artifact_data.MAX_SUB_STAT[key][rarity_reference]
+            power += sub_stat / stats_data.sub_stat(key, rarity=rarity_reference)
 
         return power
 
@@ -60,21 +60,21 @@ class Stats:
         return setattr(self, key, value)
 
     def __add__(self, other):
-        new_stats = {attribute: self[attribute] + other[attribute] for attribute in artifact_data.ATTRIBUTE_LIST}
+        new_stats = {attribute: self[attribute] + other[attribute] for attribute in stats_data.ATTRIBUTE_LIST}
         return Stats(**new_stats)
 
     def __sub__(self, other):
-        new_stats = {attribute: self[attribute] - other[attribute] for attribute in artifact_data.ATTRIBUTE_LIST}
+        new_stats = {attribute: self[attribute] - other[attribute] for attribute in stats_data.ATTRIBUTE_LIST}
         return Stats(**new_stats)
 
     def __iter__(self):
         yield from self.keys()
 
     def keys(self):
-        return iter([attribute for attribute in artifact_data.ATTRIBUTE_LIST if self[attribute] > 0])
+        return iter([attribute for attribute in stats_data.ATTRIBUTE_LIST if self[attribute] > 0])
 
     def values(self):
-        return iter([self[attribute] for attribute in artifact_data.ATTRIBUTE_LIST if self[attribute] > 0])
+        return iter([self[attribute] for attribute in stats_data.ATTRIBUTE_LIST if self[attribute] > 0])
 
     def items(self):
-        return iter([(attribute, self[attribute]) for attribute in artifact_data.ATTRIBUTE_LIST if self[attribute] > 0])
+        return iter([(attribute, self[attribute]) for attribute in stats_data.ATTRIBUTE_LIST if self[attribute] > 0])

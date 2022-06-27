@@ -1,4 +1,4 @@
-from weapon_data import weapon_type_map
+from static import weapons_data
 
 
 class Weapon:
@@ -9,7 +9,7 @@ class Weapon:
         self.max_level = (20 + self.ascension * 20) if self.ascension <= 1 else (40 + (self.ascension - 1) * 10)
         self.refinement = weapon['refinement']
         self.key = weapon['key']
-        self.type = weapon_type_map[weapon['key']]
+        self.type = weapons_data.weapons[weapon['key']]['type']
         self.location = weapon['location']
 
     def upgrade(self):

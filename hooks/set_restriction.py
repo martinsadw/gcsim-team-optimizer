@@ -1,8 +1,8 @@
 from collections import defaultdict
 import random
 
-import artifact_data
 from gcsim_utils import GcsimData
+from static import stats_data
 
 
 def set_score_hook(optimizer, score, set_restrictions, score_boost=50):
@@ -73,7 +73,7 @@ def set_proximity_hook(optimizer, individual, set_restrictions):
         slot_order = list(range(1, 6))
         random.shuffle(slot_order)
         for slot in slot_order:
-            slot_name = artifact_data.EQUIPMENT_NAME[slot]
+            slot_name = stats_data.EQUIPMENT_NAME[slot]
             # print(f'Trying slot {slot_name} (id={slot})')
             slot_artifact = team_info[i]['artifacts'][slot_name]
             slot_index = i * optimizer.character_length + slot

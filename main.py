@@ -33,14 +33,14 @@ def main():
         'noelle': {
             'penalty': 0.0,
             'sets': [
-                {'gladiatorsfinale': 4},
-                {'huskofopulentdreams': 4},
+                {'GladiatorsFinale': 4},
+                {'HuskOfOpulentDreams': 4},
             ]
         },
         'zhongli': {
             'penalty': 0.0,
             'sets': [
-                {'tenacityofthemillelith': 4},
+                {'TenacityOfTheMillelith': 4},
             ]
         },
     }

@@ -1,12 +1,11 @@
 import numpy as np
 
-import artifact_data
-from character_data import character_weapon_type_map
+from static import characters_data, stats_data
 
 
 def get_equipments_mask(team, equipment_lock):
     quant_characters = len(team)
-    character_length = len(artifact_data.EQUIPMENT_ID.keys())
+    character_length = len(stats_data.EQUIPMENT_NAME)
     equipments_mask = np.zeros((quant_characters * character_length,), dtype=bool)
     for character, slots in equipment_lock.items():
         try:
@@ -15,7 +14,7 @@ def get_equipments_mask(team, equipment_lock):
             continue
 
         for slot in slots:
-            slot_index = artifact_data.EQUIPMENT_ID[slot]
+            slot_index = stats_data.EQUIPMENT_ID[slot]
             equip_index = character_length * char_index + slot_index
             equipments_mask[equip_index] = True
 
@@ -44,7 +43,7 @@ def get_stat_subset(team, character_lock=None, equipment_lock=None):
         if character in character_lock:
             continue
 
-        stats = set(artifact_data.ATTRIBUTE_LIST)
+        stats = set(stats_data.ATTRIBUTE_LIST)
         if character in equipment_lock:
             if 'goblet' in equipment_lock[character]:
                 stats -= goblet_stats
@@ -63,10 +62,10 @@ def validate_equipments(equipment_vector, team):
 
 
 def check_repeated_equipment(equipment_vector, team):
-    character_length = len(artifact_data.EQUIPMENT_ID.keys())
+    character_length = len(stats_data.EQUIPMENT_NAME)
     used_equipments = set()
     for i, character_name in enumerate(team):
-        weapon_type = character_weapon_type_map[character_name]
+        weapon_type = characters_data.characters[character_name]['weapon']
 
         weapon_key = (weapon_type, equipment_vector[i * character_length])
         if weapon_key in used_equipments:
