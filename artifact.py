@@ -1,6 +1,6 @@
 import math
 
-import artifact_data
+from static import stats_data
 from stats import Stats
 
 
@@ -20,7 +20,7 @@ class Artifact:
         for sub_stat in artifact['substats']:
             if sub_stat['key'] is None:
                 self.empty_sub_stats += 1
-            elif sub_stat['key'] in artifact_data.PERCENT_STATS:
+            elif sub_stat['key'] in stats_data.PERCENT_STATS:
                 sub_stats[sub_stat['key']] = sub_stat['value'] / 100
             else:
                 sub_stats[sub_stat['key']] = sub_stat['value']

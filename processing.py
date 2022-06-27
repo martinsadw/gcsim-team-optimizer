@@ -6,31 +6,31 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
 
-import artifact_data
 from gcsim_utils import GcsimData
+from static import artifacts_data, stats_data
 from stats import Stats
 
 
-def artifacts_set_count(artifacts_data, weight_function=None):
+def artifacts_set_count(artifacts_list, weight_function=None):
     if weight_function is None:
         def weight_function(artifact): return 1
 
     set_count = defaultdict(int)
-    for artifacts_piece in artifacts_data.values():
+    for artifacts_piece in artifacts_list.values():
         for artifact_piece in artifacts_piece:
-            if artifact_piece['level'] >= 20 and artifact_piece['rarity'] >= 5:
-                key = artifact_data.SET_READABLE_SHORT[artifact_piece['set_key']]
+            if artifact_piece.level >= 20 and artifact_piece.rarity >= 5:
+                key = artifacts_data.artifacts[artifact_piece.set_key]['short_name']
                 set_count[key] += weight_function(artifact_piece)
 
     return set_count
 
 
-def artifacts_set_count_threshold(artifacts_data, thresholds, weight_function):
+def artifacts_set_count_threshold(artifacts_list, thresholds, weight_function):
     set_count = defaultdict(lambda: [0] * len(thresholds))
-    for artifacts_piece in artifacts_data.values():
+    for artifacts_piece in artifacts_list.values():
         for artifact in artifacts_piece:
             if artifact.level >= 0 and artifact.rarity >= 5:
-                key = artifact_data.SET_READABLE_SHORT[artifact.set_key]
+                key = artifacts_data.artifacts[artifact.set_key]['short_name']
                 for bin_number, threshold in enumerate(thresholds):
                     if weight_function(artifact) > threshold:
                         set_count[key][bin_number] += 1
@@ -99,7 +99,7 @@ def sub_stats_gradient(base_gcsim_data, stat_subset=None, output_dir='output', s
     if stat_subset is None:
         stat_subset = [(i, stat_key)
                        for i in range(len(base_gcsim_data.characters))
-                       for stat_key in artifact_data.ATTRIBUTE_LIST]
+                       for stat_key in stats_data.ATTRIBUTE_LIST]
 
     # Finite Difference Coefficients Calculator
     # https://web.media.mit.edu/~crtaylor/calculator.html

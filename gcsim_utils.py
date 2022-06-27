@@ -8,9 +8,7 @@ import subprocess
 
 import settings
 from stats import Stats
-from character_data import gcsim_to_good_character, good_to_gcsim_character, character_element_map
-from weapon_data import gcsim_to_good_weapon, string_to_gcsim_weapon_class, weapon_type_map
-from artifact_data import string_to_gcsim_stat
+from static import artifacts_data, characters_data, stats_data, weapons_data
 
 
 GCSIM_DPS_REGEX = r"resulting in (?P<mean>-?[\d\.]+) dps " \
@@ -169,13 +167,14 @@ class GcsimData:
         #  - [ ] targets
         updated_parsed_data = copy.deepcopy(parsed_data)
 
-        updated_parsed_data['characters']['initial'] = good_to_gcsim_character[self.config['active']]
+        updated_parsed_data['characters']['initial'] = characters_data.good_to_gcsim(self.config['active'])
         updated_parsed_data['characters']['profile'] = []
         for character in self.characters:
+            gcsim_sets = {artifacts_data.good_to_gcsim(key): value for key, value in character.sets.items()}
             weapon = character.weapon
-            character_stats = [0 for _ in string_to_gcsim_stat]
+            character_stats = [0 for _ in stats_data.STATKEY_TO_GOOD]
             for stat_key, stat_value in (character.main_stats + character.sub_stats + character.extra_stats).items():
-                character_stats[string_to_gcsim_stat[stat_key]] = stat_value
+                character_stats[stats_data.GOOD_TO_STATKEY[stat_key]] = stat_value
             character_data = {
                 'Params': {},
                 'SetParams': {},
@@ -184,16 +183,14 @@ class GcsimData:
                     'base_def': 0,
                     'base_hp': 0,
                     'cons': character.cons,
-                    'element': character_element_map[gcsim_to_good_character[character.key]],
-                    # TODO(andre): IMPORTANT! organize string conversions
-                    'key': 'kazuha' if character.key == 'kaedeharakazuha' else character.key,
-                    # 'key': character.key,
+                    'element': characters_data.characters[character.key]['element'],
+                    'key': characters_data.good_to_gcsim(character.key),
                     'level': character.level,
                     'max_level': character.max_level,
                     'name': '',
                     'start_hp': -1,
                 },
-                'sets': character.sets,
+                'sets': gcsim_sets,
                 'stats': character_stats,
                 'stats_by_label': {
                     '': character_stats,
@@ -204,13 +201,13 @@ class GcsimData:
                     'skill': character.talent_3,
                 },
                 'weapon': {
-                    'Class': string_to_gcsim_weapon_class[weapon_type_map[gcsim_to_good_weapon[weapon['key']]]],
+                    'Class': weapons_data.GOOD_TO_TYPEKEY[weapons_data.weapons[weapon['key']]['type']],
                     'Params': {},
                     'base_atk': 0,
-                    'key': '',
+                    'key': '',  # NOTE(andre): Attribute not used by gcsim
                     'level': weapon['level'],
                     'max_level': weapon['max_level'],
-                    'name': weapon['key'],
+                    'name': weapons_data.good_to_gcsim(weapon['key']),
                     'refine': weapon['refine'],
                 }
             }
@@ -267,7 +264,7 @@ class GcsimData:
 class GcsimCharacter:
     def __init__(self, character_data):
         character = character_data['character']
-        self.key = character.key.lower()
+        self.key = character.key
         self.level = character.level
         self.max_level = character.max_level
         self.cons = character.constellation
@@ -277,7 +274,7 @@ class GcsimCharacter:
 
         weapon = character_data['weapon']
         self.weapon = {
-            'key': weapon.key.lower(),
+            'key': weapon.key,
             'level': weapon.level,
             'max_level': weapon.max_level,
             'refine': weapon.refinement,
@@ -291,7 +288,7 @@ class GcsimCharacter:
             if artifact is None:
                 continue
 
-            self.sets[artifact.set_key.lower()] += 1
+            self.sets[artifact.set_key] += 1
             self.main_stats += Stats.by_artifact_main_stat(artifact.main_stat_key, artifact.level)
             self.sub_stats += artifact.sub_stats
 
@@ -301,36 +298,38 @@ class GcsimCharacter:
             self.extra_stats = Stats()
 
     def __str__(self):
+        char_key = characters_data.good_to_gcsim(self.key)
         # Character base stats
         result = '{name} char lvl={level}/{max_level} cons={cons} talent={t1},{t2},{t3};\n'.format(
-            name=self.key, level=self.level, max_level=self.max_level,
+            name=char_key, level=self.level, max_level=self.max_level,
             cons=self.cons, t1=self.talent_1, t2=self.talent_2, t3=self.talent_3)
 
+        weapon_key = weapons_data.good_to_gcsim(self.weapon['key'])
         # Character Weapon
         result += '{name} add weapon="{weapon}" refine={refine} lvl={level}/{max_level};\n'.format(
-            name=self.key, weapon=self.weapon['key'], level=self.weapon['level'], max_level=self.weapon['max_level'],
+            name=char_key, weapon=weapon_key, level=self.weapon['level'], max_level=self.weapon['max_level'],
             refine=self.weapon['refine'])
 
         # Character artifact set
         for set_key, set_count in self.sets.items():
             result += '{name} add set="{set}" count={count};\n'.format(
-                name=self.key, set=set_key, count=set_count)
+                name=char_key, set=artifacts_data.good_to_gcsim(set_key), count=set_count)
 
         # Character main stats
-        main_stats = '{name} add stats '.format(name=self.key)
+        main_stats = '{name} add stats '.format(name=char_key)
         main_stats += self.main_stats.to_gcsim_text()
         main_stats += '; #main\n'
         result += main_stats
 
         # Character sub stats
-        sub_stats = '{name} add stats '.format(name=self.key)
+        sub_stats = '{name} add stats '.format(name=char_key)
         sub_stats += self.sub_stats.to_gcsim_text()
         sub_stats += '; #subs\n'
         result += sub_stats
 
         # Additional stats
         if self.extra_stats is not None:
-            extra_stats = '{name} add stats '.format(name=self.key)
+            extra_stats = '{name} add stats '.format(name=char_key)
             extra_stats += self.extra_stats.to_gcsim_text()
             extra_stats += '; #extra\n'
             result += extra_stats

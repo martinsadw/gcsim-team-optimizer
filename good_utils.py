@@ -5,8 +5,7 @@ from artifact import Artifact
 from character import Character
 from weapon import Weapon
 
-from character_data import character_weapon_type_map
-from weapon_data import weapon_type_map
+from static import characters_data, weapons_data
 
 
 class GoodData:
@@ -41,12 +40,12 @@ class GoodData:
 
     @staticmethod
     def read_characters(good_data):
-        characters_data = []
+        characters_list = []
 
         for character_id, character in enumerate(good_data['characters']):
-            characters_data.append(Character(character, character_id))
+            characters_list.append(Character(character, character_id))
 
-        return characters_data
+        return characters_list
 
     @staticmethod
     def read_weapons(good_data):
@@ -59,7 +58,7 @@ class GoodData:
         }
 
         for weapon_id, weapon in enumerate(good_data['weapons']):
-            weapon_type = weapon_type_map[weapon['key']]
+            weapon_type = weapons_data.weapons[weapon['key']]['type']
             weapon_data[weapon_type].append(Weapon(weapon, weapon_id))
 
         return weapon_data
@@ -106,7 +105,7 @@ class GoodData:
             'lock': False,
             'id': weapon_id,
         }
-        weapon_type = weapon_type_map[weapon_name]
+        weapon_type = weapons_data.weapons[weapon_name]['type']
         new_weapon = Weapon(new_weapon_data, weapon_id)
         self.weapons[weapon_type].append(new_weapon)
 
@@ -137,16 +136,16 @@ class GoodData:
         return artifacts
 
     def get_weapons_by_name(self, weapon_name):
-        if weapon_name not in weapon_type_map:
+        if weapon_name not in weapons_data.weapons.keys():
             return []
 
-        weapon_type = weapon_type_map[weapon_name]
+        weapon_type = weapons_data.weapons[weapon_name]['type']
         weapons = list((x for x in self.weapons[weapon_type] if x.key == weapon_name))
 
         return weapons
 
     def get_weapon_by_character(self, character_name):
-        weapon_type = character_weapon_type_map[character_name]
+        weapon_type = characters_data.characters[character_name]['weapon']
 
         for weapon in self.weapons[weapon_type]:
             if weapon.location == character_name:
@@ -179,7 +178,7 @@ class GoodData:
         team_vector = [0] * (character_length * quant_character)
 
         for i, character_name in enumerate(team_list):
-            weapon_type = character_weapon_type_map[character_name]
+            weapon_type = characters_data.characters[character_name]['weapon']
             for j, weapon in enumerate(self.weapons[weapon_type]):
                 if weapon.location == character_name:
                     team_vector[i * character_length] = j
@@ -194,7 +193,7 @@ class GoodData:
         return team_vector
 
     def get_team_build_by_vector(self, team_list, equipment_vector):
-        weapons_types = [character_weapon_type_map[name] for name in team_list]
+        weapons_types = [characters_data.characters[name]['weapon'] for name in team_list]
         weapons_options = [self.weapons[weapon_type] for weapon_type in weapons_types]
 
         team_info = []
@@ -213,7 +212,7 @@ class GoodData:
         return team_info
 
     def get_equipment_vector_quant_options(self, team_list):
-        weapons_types = [character_weapon_type_map[name] for name in team_list]
+        weapons_types = [characters_data.characters[name]['weapon'] for name in team_list]
         artifacts_quant_options = [
             len(self.artifacts['flower']),
             len(self.artifacts['plume']),
@@ -240,7 +239,7 @@ class GoodData:
                     for key, value in weights.items():
                         normalized_weights[key] = value / weights_max
 
-            weapon_type = character_weapon_type_map[team_list[i]]
+            weapon_type = characters_data.characters[team_list[i]]['weapon']
             equipments_score.append([1 for _ in self.weapons[weapon_type]])
 
             for artifacts in self.artifacts.values():
@@ -254,7 +253,7 @@ class GoodData:
 
         used_equipments = set()
         for i, character_name in enumerate(team_list):
-            weapon_type = character_weapon_type_map[character_name]
+            weapon_type = characters_data.characters[character_name]['weapon']
 
             weapon_key = (weapon_type, equipment_vector[i * character_length])
             if weapon_key in used_equipments:
