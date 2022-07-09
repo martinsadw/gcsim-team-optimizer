@@ -25,8 +25,8 @@ restart;
 '''
 
 action = {
-  'name': 'xiao_xingqiu_xiangling_bennett',
-  'team': ['RaidenShogun', 'Xingqiu', 'Xiangling', 'Bennett'],
+  'name': 'xiao_raiden_yelan_bennett',
+  'team': ['Xiao', 'RaidenShogun', 'Yelan', 'Bennett'],
   'active': 'RaidenShogun',
   'simulation_length': 100,
   'mode': 'sl',
