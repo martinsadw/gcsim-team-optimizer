@@ -48,7 +48,7 @@ xingqiu attack;
 '''
 
 action = {
-  'name': 'hutao_xingqiu_albedo_zhongli',
+  'name': 'hutao_geobros',
   'team': ['HuTao', 'Xingqiu', 'Albedo', 'Zhongli'],
   'active': 'Xingqiu',
   'simulation_length': 90,
