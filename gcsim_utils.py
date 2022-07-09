@@ -72,7 +72,7 @@ class GcsimLibRunner:
 
 try:
     default_runner = GcsimLibRunner(settings.DEFAULT_LIB_PATH)
-except FileNotFoundError:
+except (FileNotFoundError, OSError):
     print(f"{settings.DEFAULT_LIB_NAME} not found. Using {settings.DEFAULT_EXEC_NAME}")
     default_runner = GcsimExeRunner(settings.DEFAULT_EXEC_PATH)
 
