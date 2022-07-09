@@ -192,6 +192,12 @@ weapons['EyeOfPerception'] = {
     'type': 'catalyst',
 }
 
+weapons['FadingTwilight'] = {
+    'good_name': 'FadingTwilight',
+    'gcsim_name': 'fadingtwilight',
+    'type': 'bow',
+}
+
 weapons['FavoniusCodex'] = {
     'good_name': 'FavoniusCodex',
     'gcsim_name': 'favoniuscodex',
